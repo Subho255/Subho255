@@ -1,0 +1,16 @@
+{
+  "name": "headline-desk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Headline management tool for authors, powered by TypeSafe Jev judgments.",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev:mock": "TYPESAFE_MOCK=1 node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  }
+}

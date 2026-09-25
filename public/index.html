@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Headline Desk</title>
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="mock-banner" class="banner" hidden>
+    Mock mode — offline heuristics stand in for Jev. Judgments here are placeholders, not model output.
+  </div>
+
+  <main class="board">
+    <!-- Column 1: input -->
+    <section class="col col-input">
+      <h2 class="col-title">Article · what the author wrote</h2>
+      <form id="form" class="card">
+        <div class="card-head"><span class="tag">A1</span><b>Article body</b></div>
+        <textarea id="body" rows="14" placeholder="Paste the full article text…" required></textarea>
+        <div class="card-head"><span class="tag">A2</span><b>Headline drafts</b><span class="muted count" id="draft-count">0</span></div>
+        <textarea id="drafts" rows="7" placeholder="One headline per line" required></textarea>
+        <div class="actions">
+          <button type="submit" id="run">Analyze headlines</button>
+          <button type="button" id="sample" class="ghost">Load sample</button>
+        </div>
+        <p id="error" class="error" hidden></p>
+      </form>
+    </section>
+
+    <!-- Column 2: core story + intents -->
+    <section class="col col-intents">
+      <h2 class="col-title">Intents · how each draft reads</h2>
+      <div class="card" id="core-card">
+        <div class="card-head"><span class="tag">C0</span><b>Core story</b><span class="muted count" id="core-conf"></span></div>
+        <p class="core" id="core-story"><span class="muted">Run an analysis to identify the story in one sentence.</span></p>
+        <div class="meta-row" id="core-meta"></div>
+      </div>
+      <div id="intent-cards"></div>
+    </section>
+
+    <!-- Column 3: checks for the selected headline -->
+    <section class="col col-checks">
+      <h2 class="col-title">Checks · selected headline</h2>
+      <div class="selected-headline" id="selected-headline"><span class="muted">Select a draft to inspect.</span></div>
+      <div id="check-cards"></div>
+    </section>
+
+    <!-- Column 4: recommendation -->
+    <section class="col col-rec">
+      <h2 class="col-title">Recommendation</h2>
+      <div class="card rec-card">
+        <div class="card-head"><b>Recommended headline</b><span class="pill" id="rec-status"></span></div>
+        <p class="rec-headline" id="rec-headline"><span class="muted">—</span></p>
+        <div class="meter-row"><b>Checks passed</b><span id="rec-passed">0 / 5</span></div>
+        <div class="meter" id="rec-meter"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><b>Best draft per intent</b></div>
+        <ul class="per-intent" id="per-intent"></ul>
+      </div>
+      <div class="card">
+        <div class="card-head"><b>Pipeline</b><span class="muted count" id="usage"></span></div>
+        <ol class="timeline" id="timeline"></ol>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
