@@ -31,6 +31,12 @@ async function init() {
   try {
     const cfg = await fetch('/api/config').then((r) => r.json());
     $('mock-banner').hidden = !cfg.mock;
+    if (cfg.user) {
+      $('user').hidden = false;
+      $('user-email').textContent = cfg.user.email;
+      $('logout').hidden = !cfg.auth;
+      if (cfg.user.picture) Object.assign($('user-pic'), { src: cfg.user.picture, hidden: false });
+    }
   } catch { /* server offline: form still renders */ }
 
   $('sample').addEventListener('click', () => {
@@ -60,6 +66,7 @@ async function onSubmit(e) {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ body: $('body').value, drafts: $('drafts').value }),
     });
+    if (res.status === 401) { location.href = '/login'; return; }
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? `Request failed (${res.status})`);
     state = { result: data, selected: data.recommendation.headline };

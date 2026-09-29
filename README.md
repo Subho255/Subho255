@@ -51,15 +51,54 @@ Tests: `npm test`
 
 The API key stays on the server. The browser only calls `/api/analyze`.
 
+## Deploy with Google sign-in
+
+The server has Google sign-in built in. Signed-out visitors see a login page. The app and `/api/*` need a session: a signed, HttpOnly cookie that lasts 7 days. Each user gets 30 analyses per hour by default, which protects the shared TypeSafe key. With `NODE_ENV=production`, the server refuses to start unless sign-in is configured.
+
+### 1. Create Google OAuth credentials
+
+1. Go to [Google Cloud Console → APIs & Services → Credentials](https://console.cloud.google.com/apis/credentials).
+2. Set up the **OAuth consent screen**: user type *External*, app name *Headline Desk*, scopes `openid email profile`. Publish the app, or add testers while it's in testing mode.
+3. Create an **OAuth client ID** of type *Web application*.
+4. Add this **Authorized redirect URI**: `https://<your-app-url>/auth/google/callback`
+5. Copy the client ID and client secret.
+
+### 2. Deploy
+
+**Render (free tier, one click):**
+1. In [Render](https://dashboard.render.com), choose New → Blueprint and pick this repo/branch. `render.yaml` sets everything up.
+2. When prompted, fill in `TYPESAFE_API_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and optionally `ALLOWED_DOMAINS` / `ALLOWED_EMAILS`. `SESSION_SECRET` is generated for you.
+3. The app URL will be `https://headline-desk-XXXX.onrender.com`. Put `/auth/google/callback` on that URL into the Google client's redirect URIs from step 1.
+
+**Anywhere with Docker** (Cloud Run, Fly, a VM):
+```sh
+docker build -t headline-desk .
+docker run -p 3000:3000 --env-file .env -e PUBLIC_URL=https://your.domain headline-desk
+```
+On Cloud Run: `gcloud run deploy headline-desk --source . --allow-unauthenticated --set-env-vars ...`. The app does its own sign-in, which is why the service can allow unauthenticated requests.
+
+### Who can sign in
+
+| `ALLOWED_DOMAINS` / `ALLOWED_EMAILS` | Access |
+| --- | --- |
+| both empty | any verified Google account |
+| `ALLOWED_DOMAINS=jagrannewmedia.com` | only that Workspace domain |
+| `ALLOWED_EMAILS=a@gmail.com,b@gmail.com` | only those people |
+
+Both variables can be combined. Every analysis spends your TypeSafe credits, so restrict access unless you intend the tool to be public.
+
 ## Layout
 
 ```
-server.js           HTTP server: static UI + /api/analyze
+server.js           HTTP server: auth gate, static UI, /api/analyze
 src/text.js         sentence split, name candidates, headline stats (code-owned)
 src/questions.js    Jev question definitions (intents, checks)
 src/analyze.js      two-stage pipeline
 src/policy.js       checks, gates, weights, recommendation
+src/auth.js         Google OAuth, signed session cookie, allowlist, rate limit
 src/mock.js         offline stand-in client
-public/             UI (vanilla HTML/CSS/JS)
+public/             UI + login page (vanilla HTML/CSS/JS)
+render.yaml         Render blueprint
+Dockerfile          container image for any host
 test/               node:test suite
 ```
