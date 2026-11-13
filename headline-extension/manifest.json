@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Headline Optimiser",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Reads the article in the CMS Enter_Body field and suggests SEO-backed headlines for Search, Discover, data-led and explainer formats.",
   "action": {
     "default_title": "Suggest headlines",
@@ -21,7 +21,8 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "identity"
   ],
   "host_permissions": [
     "https://api.anthropic.com/*"

@@ -249,7 +249,14 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; w
   background: var(--surface); border: 2px solid var(--line); border-radius: 99px; padding: 3px 12px;
 }
 
-#setup p { margin: 0 0 10px; }
+#setup { text-align: center; }
+#setup > p:first-child { margin: 0 0 12px; font-size: 14px; }
+.google {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: #fff; color: #3c4043; border: 2px solid var(--line); border-radius: 99px;
+  padding: 9px 20px; font: 600 15px var(--display); box-shadow: var(--shadow);
+}
+.google:not(:disabled):hover { background: #fff5f9; }
 
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation: none; }

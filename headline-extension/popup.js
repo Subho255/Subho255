@@ -1,5 +1,5 @@
 import { readField, writeHeadline } from './lib/page.js';
-import { getSettings } from './lib/settings.js';
+import { getSettings, isReady, mode } from './lib/settings.js';
 
 const LABELS = { search: 'Search', discover: 'Discover', data: 'Data-driven', explainer: 'Explainer' };
 // Character targets per surface. Only Search is cut off hard in results.
@@ -18,10 +18,11 @@ init();
 async function init() {
   $('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
   $('open-settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
+  $('sign-in').addEventListener('click', onSignIn);
 
   settings = await getSettings();
-  if (!settings.apiKey) {
-    $('setup').hidden = false;
+  if (!isReady(settings)) {
+    showSetup();
     return;
   }
   $('main').hidden = false;
@@ -42,6 +43,29 @@ async function init() {
   chrome.storage.session.onChanged.addListener((changes) => {
     if (changes[key]?.newValue) render(changes[key].newValue);
   });
+}
+
+function showSetup(error = '') {
+  const server = mode(settings) === 'server';
+  $('setup').hidden = false;
+  $('setup-text').textContent = server
+    ? 'Sign in with your company Google account (@jagrannewmedia.com) to start.'
+    : 'Set up the extension first: sign in through your company server, or add an API key.';
+  $('sign-in').hidden = !server;
+  $('open-settings').hidden = server;
+  $('setup-error').hidden = !error;
+  $('setup-error').textContent = error;
+}
+
+async function onSignIn() {
+  // The Google window takes focus, which usually closes this popup. Sign-in carries on in
+  // the background; reopen the popup afterwards.
+  $('sign-in').disabled = true;
+  $('setup-text').textContent = 'Finish signing in in the Google window…';
+  const res = await chrome.runtime.sendMessage({ type: 'signIn' });
+  if (res?.ok) return location.reload();
+  $('sign-in').disabled = false;
+  showSetup(res?.message ?? 'Sign-in failed.');
 }
 
 async function readPage() {
@@ -101,6 +125,11 @@ function render(entry) {
   $('generate').disabled = loading || !page.text;
   $('error').hidden = entry.status !== 'error';
   $('error').textContent = entry.message ?? '';
+  if (entry.signIn) {
+    settings.authToken = '';
+    showSetup(entry.message);
+    $('error').hidden = true;
+  }
   // The illustration fills the space until there are results.
   $('empty').hidden = loading || entry.status === 'done' || !$('results').hidden;
   if (entry.status !== 'done') {
@@ -158,7 +187,8 @@ function showResult(r) {
   $('meta-count').textContent = `(${charCount(r.meta_description)}/155)`;
 
   const tokens = r.usage ? (r.usage.input_tokens ?? 0) + (r.usage.output_tokens ?? 0) : 0;
-  $('meta-info').textContent = `${r.model} · ${r.article_language} · ${tokens.toLocaleString()} tokens. Check facts before publishing.`;
+  const who = mode(settings) === 'server' && settings.authEmail ? ` · ${settings.authEmail}` : '';
+  $('meta-info').textContent = `${r.model} · ${r.article_language} · ${tokens.toLocaleString()} tokens${who}. Check facts before publishing.`;
 }
 
 function chips(el, items) {

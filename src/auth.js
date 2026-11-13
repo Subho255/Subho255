@@ -9,7 +9,12 @@ const GOOGLE_AUTH = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token';
 const SESSION_COOKIE = 'hd_session';
 const STATE_COOKIE = 'hd_oauth_state';
+const EXT_COOKIE = 'hd_ext_login';
 const SESSION_TTL_S = 7 * 24 * 3600;
+// Sign-in for the Chrome extension lasts 30 days, then the user clicks "Sign in" again.
+export const EXT_TOKEN_TTL_S = 30 * 24 * 3600;
+// chrome.identity.getRedirectURL() always has this shape; nothing else may receive a token.
+const EXT_REDIRECT = /^https:\/\/([a-p]{32})\.chromiumapp\.org\/[\w\-./]*$/;
 
 const list = (v) => String(v ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 
@@ -25,6 +30,11 @@ export function authConfig(env = process.env) {
     secureCookies: publicUrl.startsWith('https://'),
     allowedEmails: list(env.ALLOWED_EMAILS),
     allowedDomains: list(env.ALLOWED_DOMAINS),
+    // Require the Google account to be managed by the allowed Google Workspace domain
+    // (the ID token's "hd" claim), not just to have an address at that domain.
+    requireWorkspace: ['1', 'true', 'yes'].includes(String(env.REQUIRE_WORKSPACE ?? '').toLowerCase()),
+    // Optional: only these extension IDs may sign in. Empty = any copy of the extension.
+    extensionIds: list(env.EXTENSION_IDS),
   };
 }
 
@@ -91,7 +101,22 @@ function cookie(name, value, cfg, maxAge) {
 /** The signed-in user for a request, or null. With auth disabled, a local dev user. */
 export function currentUser(req, cfg) {
   if (!cfg.enabled) return { email: 'local@dev', name: 'Local dev', local: true };
-  return verify(parseCookies(req.headers.cookie)[SESSION_COOKIE], cfg.secret);
+  // The extension sends "Authorization: Bearer <token>"; the web app uses the session cookie.
+  const bearer = /^Bearer\s+(\S+)$/i.exec(req.headers.authorization ?? '')?.[1];
+  const user = verify(bearer ?? parseCookies(req.headers.cookie)[SESSION_COOKIE], cfg.secret);
+  if (!user) return null;
+  // An extension token is only valid as a bearer token, and a session only as a cookie.
+  if ((user.typ === 'ext') !== Boolean(bearer)) return null;
+  // Re-check the allowlist on every request, so removing someone takes effect at once.
+  return isAllowed(user.email, cfg) ? user : null;
+}
+
+/** Validates the redirect URL a Chrome extension asks for. Returns it, or null. */
+export function extensionRedirect(value, cfg) {
+  const m = EXT_REDIRECT.exec(String(value ?? ''));
+  if (!m) return null;
+  if (cfg.extensionIds.length && !cfg.extensionIds.includes(m[1])) return null;
+  return m[0];
 }
 
 function redirect(res, location, cookies = []) {
@@ -110,7 +135,7 @@ export async function handleAuth(req, res, url, cfg, fetchImpl = fetch) {
   }
   if (!cfg.enabled) return false;
 
-  if (url.pathname === '/auth/google') {
+  const startGoogle = (extra = []) => {
     const state = b64(randomBytes(24));
     const params = new URLSearchParams({
       client_id: cfg.clientId,
@@ -120,14 +145,39 @@ export async function handleAuth(req, res, url, cfg, fetchImpl = fetch) {
       state,
       prompt: 'select_account',
     });
-    redirect(res, `${GOOGLE_AUTH}?${params}`, [cookie(STATE_COOKIE, state, cfg, 600)]);
+    // With a single company domain, ask Google to offer only accounts from it.
+    // This only filters the account picker; the callback still enforces the allowlist.
+    if (cfg.allowedDomains.length === 1 && !cfg.allowedEmails.length) params.set('hd', cfg.allowedDomains[0]);
+    redirect(res, `${GOOGLE_AUTH}?${params}`, [cookie(STATE_COOKIE, state, cfg, 600), ...extra(state)]);
+  };
+
+  if (url.pathname === '/auth/google') {
+    startGoogle(() => [cookie(EXT_COOKIE, '', cfg, 0)]);
+    return true;
+  }
+
+  // Sign-in started from the Chrome extension (chrome.identity.launchWebAuthFlow).
+  if (url.pathname === '/auth/extension') {
+    const target = extensionRedirect(url.searchParams.get('redirect'), cfg);
+    if (!target) {
+      res.writeHead(400, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });
+      res.end('Invalid extension redirect.');
+      return true;
+    }
+    startGoogle((state) => [cookie(EXT_COOKIE, sign({ s: state, to: target, exp: Math.floor(Date.now() / 1000) + 600 }, cfg.secret), cfg, 600)]);
     return true;
   }
 
   if (url.pathname === '/auth/google/callback') {
-    const clearState = cookie(STATE_COOKIE, '', cfg, 0);
-    const fail = (reason) => redirect(res, `/login?error=${encodeURIComponent(reason)}`, [clearState]);
-    const expectedState = parseCookies(req.headers.cookie)[STATE_COOKIE];
+    const cookies = parseCookies(req.headers.cookie);
+    const expectedState = cookies[STATE_COOKIE];
+    // Was this sign-in started by the extension? Only if the signed cookie matches this state.
+    const ext = verify(cookies[EXT_COOKIE], cfg.secret);
+    const toExtension = ext && ext.s === expectedState && extensionRedirect(ext.to, cfg);
+    const clearState = [cookie(STATE_COOKIE, '', cfg, 0), cookie(EXT_COOKIE, '', cfg, 0)];
+    const fail = (reason) => (toExtension
+      ? redirect(res, `${toExtension}#error=${encodeURIComponent(reason)}`, clearState)
+      : redirect(res, `/login?error=${encodeURIComponent(reason)}`, clearState));
     const code = url.searchParams.get('code');
     if (url.searchParams.get('error')) return fail('cancelled'), true;
     if (!code || !expectedState || url.searchParams.get('state') !== expectedState) return fail('state'), true;
@@ -159,12 +209,26 @@ export async function handleAuth(req, res, url, cfg, fetchImpl = fetch) {
       return fail('unverified'), true;
     }
     if (!isAllowed(claims.email, cfg)) return fail('not_allowed'), true;
+    const domain = claims.email.toLowerCase().split('@')[1];
+    const byDomainOnly = !cfg.allowedEmails.includes(claims.email.toLowerCase()) && cfg.allowedDomains.includes(domain);
+    if (cfg.requireWorkspace && byDomainOnly && String(claims.hd ?? '').toLowerCase() !== domain) {
+      return fail('not_workspace'), true;
+    }
+
+    if (toExtension) {
+      const name = claims.name ?? claims.email;
+      const token = sign({ typ: 'ext', email: claims.email, name, exp: Math.floor(Date.now() / 1000) + EXT_TOKEN_TTL_S }, cfg.secret);
+      const frag = new URLSearchParams({ token, email: claims.email, name, expires_in: String(EXT_TOKEN_TTL_S) });
+      console.log(`extension sign-in: ${claims.email}`);
+      redirect(res, `${toExtension}#${frag}`, clearState);
+      return true;
+    }
 
     const session = sign(
       { email: claims.email, name: claims.name ?? claims.email, picture: claims.picture ?? null, exp: Math.floor(Date.now() / 1000) + SESSION_TTL_S },
       cfg.secret,
     );
-    redirect(res, '/', [clearState, cookie(SESSION_COOKIE, session, cfg, SESSION_TTL_S)]);
+    redirect(res, '/', [...clearState, cookie(SESSION_COOKIE, session, cfg, SESSION_TTL_S)]);
     return true;
   }
   return false;
@@ -172,7 +236,7 @@ export async function handleAuth(req, res, url, cfg, fetchImpl = fetch) {
 
 // --- rate limiting ------------------------------------------------------------
 
-/** Fixed-window per-user limiter to protect the shared TypeSafe API key. */
+/** Fixed-window per-user limiter to protect the shared API keys. */
 export function rateLimiter(limit, windowMs, now = () => Date.now()) {
   const hits = new Map();
   return (key) => {

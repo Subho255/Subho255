@@ -10,6 +10,11 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Anthropic key for the Chrome extension's headline suggestions. Stays on the server.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Optional: the Headline Desk web app's TypeSafe key. Leave empty to run the
+      # server for the extension only.
       - key: TYPESAFE_API_KEY
         sync: false
       - key: GOOGLE_CLIENT_ID
@@ -18,10 +23,17 @@ services:
         sync: false
       - key: SESSION_SECRET
         generateValue: true
-      # Comma-separated. Leave both empty to allow any verified Google account.
+      # Only company Google accounts may sign in.
       - key: ALLOWED_DOMAINS
-        sync: false
+        value: jagrannewmedia.com
+      # Also require the account to be managed by the company's Google Workspace.
+      - key: REQUIRE_WORKSPACE
+        value: "1"
+      # Optional extra people outside the domain, comma-separated.
       - key: ALLOWED_EMAILS
         sync: false
       - key: RATE_LIMIT_PER_HOUR
         value: "30"
+      # Headline suggestions per person per hour from the extension.
+      - key: HEADLINES_PER_HOUR
+        value: "60"

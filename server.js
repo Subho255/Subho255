@@ -6,6 +6,7 @@ import { APIError, APIConnectionError, TypeSafeClient } from '@typesafe-ai/sdk';
 import { InputError, analyze } from './src/analyze.js';
 import { MockTypeSafeClient } from './src/mock.js';
 import { assertAuthConfig, authConfig, currentUser, handleAuth, rateLimiter } from './src/auth.js';
+import { DEFAULT_MODEL, createAnthropicClient, headlineErrorResponse, headlineService } from './src/headlines.js';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const PUBLIC = fileURLToPath(new URL('./public/', import.meta.url));
@@ -14,9 +15,14 @@ const MOCK = process.env.TYPESAFE_MOCK === '1';
 const auth = authConfig();
 assertAuthConfig(auth);
 
-// The API key stays on the server; the browser only talks to /api/*.
-const client = MOCK ? new MockTypeSafeClient() : new TypeSafeClient({ timeout: 20000 });
+// API keys stay on the server; browsers and the extension only talk to /api/*.
+// Each service is optional, so the server can run for the extension alone.
+const client = MOCK ? new MockTypeSafeClient()
+  : process.env.TYPESAFE_API_KEY ? new TypeSafeClient({ timeout: 20000 }) : null;
 const limit = rateLimiter(Number(process.env.RATE_LIMIT_PER_HOUR ?? 30), 3600_000);
+const headlineModel = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
+const suggestHeadlines = headlineService({ client: createAnthropicClient(), model: headlineModel });
+const headlineLimit = rateLimiter(Number(process.env.HEADLINES_PER_HOUR ?? 60), 3600_000);
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 // Reachable without signing in.
@@ -42,6 +48,21 @@ async function sendFile(res, rel) {
   return send(res, 200, file, TYPES[extname(path)] ?? 'application/octet-stream');
 }
 
+// The Chrome extension calls /api/ext/* from a chrome-extension:// origin with a bearer
+// token (no cookies), so those routes allow that origin. EXTENSION_IDS narrows it further.
+function extensionCors(req) {
+  const origin = req.headers.origin ?? '';
+  const m = /^chrome-extension:\/\/([a-p]{32})$/.exec(origin);
+  if (!m || (auth.extensionIds.length && !auth.extensionIds.includes(m[1]))) return {};
+  return {
+    'access-control-allow-origin': origin,
+    'access-control-allow-headers': 'authorization, content-type',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'access-control-max-age': '600',
+    vary: 'Origin',
+  };
+}
+
 async function readJson(req, limitBytes = 200_000) {
   let size = 0;
   const chunks = [];
@@ -59,8 +80,11 @@ async function readJson(req, limitBytes = 200_000) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  const isExt = url.pathname.startsWith('/api/ext/');
+  const cors = isExt ? extensionCors(req) : {};
   try {
     if (url.pathname === '/healthz') return send(res, 200, { ok: true });
+    if (isExt && req.method === 'OPTIONS') return send(res, 204, '', 'text/plain', cors);
     if (url.pathname.startsWith('/auth/') && (await handleAuth(req, res, url, auth))) return;
 
     const user = currentUser(req, auth);
@@ -69,19 +93,38 @@ const server = http.createServer(async (req, res) => {
       return sendFile(res, 'login.html');
     }
     if (!user && !PUBLIC_PATHS.has(url.pathname)) {
-      if (url.pathname.startsWith('/api/')) return send(res, 401, { error: 'Sign in required.' });
+      if (url.pathname.startsWith('/api/')) return send(res, 401, { error: 'Sign in required.' }, 'application/json', cors);
       return send(res, 302, '', 'text/plain', { location: '/login' });
     }
 
     if (req.method === 'GET' && url.pathname === '/api/config') {
       return send(res, 200, {
         mock: MOCK,
-        model: client.defaultModel,
+        model: client?.defaultModel ?? null,
         user: { email: user.email, name: user.name, picture: user.picture ?? null },
         auth: auth.enabled,
       });
     }
+    if (req.method === 'GET' && url.pathname === '/api/ext/me') {
+      return send(res, 200, { email: user.email, name: user.name, model: headlineModel }, 'application/json', cors);
+    }
+    if (req.method === 'POST' && url.pathname === '/api/ext/headlines') {
+      const quota = headlineLimit(user.email);
+      if (!quota.ok) {
+        return send(res, 429, { error: `Hourly limit reached. Try again in ${Math.ceil(quota.retryAfterS / 60)} min.` }, 'application/json', { ...cors, 'retry-after': String(quota.retryAfterS) });
+      }
+      try {
+        const result = await suggestHeadlines(await readJson(req));
+        console.log(`headlines by ${user.email}: ${result.headlines.length} suggestions`);
+        return send(res, 200, result, 'application/json', cors);
+      } catch (err) {
+        if (err instanceof InputError) throw err;
+        const { status, error } = headlineErrorResponse(err);
+        return send(res, status, { error }, 'application/json', cors);
+      }
+    }
     if (req.method === 'POST' && url.pathname === '/api/analyze') {
+      if (!client) return send(res, 503, { error: 'Headline Desk analysis is not configured (TYPESAFE_API_KEY is missing).' });
       const quota = limit(user.email);
       if (!quota.ok) {
         return send(res, 429, { error: `Hourly limit reached. Try again in ${Math.ceil(quota.retryAfterS / 60)} min.` }, 'application/json', { 'retry-after': String(quota.retryAfterS) });
@@ -93,7 +136,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET') return sendFile(res, url.pathname === '/' ? 'index.html' : url.pathname.slice(1));
     send(res, 405, { error: 'Method not allowed' });
   } catch (err) {
-    if (err instanceof InputError) return send(res, 400, { error: err.message });
+    if (err instanceof InputError) return send(res, 400, { error: err.message }, 'application/json', cors);
     if (err instanceof APIError) {
       console.error(`TypeSafe API ${err.status} (request ${err.requestId ?? 'n/a'})`, err.body);
       return send(res, 502, { error: `TypeSafe API error ${err.status}`, requestId: err.requestId });
@@ -103,7 +146,7 @@ const server = http.createServer(async (req, res) => {
       return send(res, 502, { error: 'Could not reach the TypeSafe API.' });
     }
     console.error(err);
-    send(res, 500, { error: 'Internal error' });
+    send(res, 500, { error: 'Internal error' }, 'application/json', cors);
   }
 });
 
@@ -112,4 +155,5 @@ server.listen(PORT, () => {
   console.log(auth.enabled
     ? `Google sign-in on; allowed: ${[...auth.allowedEmails, ...auth.allowedDomains.map((d) => `@${d}`)].join(', ') || 'any verified Google account'}`
     : 'Google sign-in OFF (local development only)');
+  console.log(`Extension headlines: ${process.env.ANTHROPIC_API_KEY ? `on (${headlineModel})` : 'off (set ANTHROPIC_API_KEY)'} · Headline Desk analysis: ${client ? 'on' : 'off (set TYPESAFE_API_KEY)'}`);
 });
