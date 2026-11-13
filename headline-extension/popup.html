@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Headline Optimiser</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>Headline Optimiser</h1>
+    <button id="settings" class="icon" title="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L15 3.5h-4L10.7 6a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+    </button>
+  </header>
+
+  <section id="setup" hidden>
+    <p>Add your Anthropic API key to get started.</p>
+    <button id="open-settings" class="primary">Open settings</button>
+  </section>
+
+  <main id="main" hidden>
+    <p id="source" class="muted"></p>
+
+    <form id="form">
+      <label for="keyword">Focus keyword <span class="muted">(optional)</span></label>
+      <div class="row">
+        <input id="keyword" type="text" placeholder="e.g. RBI repo rate" autocomplete="off">
+        <button id="generate" type="submit" class="primary">Suggest headlines</button>
+      </div>
+    </form>
+
+    <div id="loading" class="loading" hidden>
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Reading the article and drafting headlines… usually 15–30 seconds.</span>
+    </div>
+    <p id="error" class="error" hidden></p>
+
+    <div id="results" hidden>
+      <div id="feedback" class="feedback" hidden></div>
+      <div id="cards"></div>
+
+      <section class="seo">
+        <h2>SEO extras</h2>
+        <div class="kv">
+          <span class="k">Primary keyword</span>
+          <div id="primary" class="chips"></div>
+        </div>
+        <div class="kv">
+          <span class="k">Related keywords</span>
+          <div id="secondary" class="chips"></div>
+        </div>
+        <div class="kv">
+          <span class="k">URL slug</span>
+          <div class="copyline"><code id="slug"></code><button class="link" data-copy="slug">Copy</button></div>
+        </div>
+        <div class="kv">
+          <span class="k">Meta description <span id="meta-count" class="muted"></span></span>
+          <div class="copyline"><span id="meta"></span><button class="link" data-copy="meta">Copy</button></div>
+        </div>
+      </section>
+      <p id="meta-info" class="muted small"></p>
+    </div>
+  </main>
+
+  <template id="card-tpl">
+    <article class="card">
+      <div class="card-head">
+        <span class="tag"></span>
+        <span class="count"></span>
+      </div>
+      <p class="headline"></p>
+      <p class="why"></p>
+      <p class="caution" hidden></p>
+      <div class="card-foot">
+        <span class="kw"></span>
+        <span class="actions">
+          <button class="link use" hidden>Use</button>
+          <button class="link copy">Copy</button>
+        </span>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
