@@ -1,17 +1,21 @@
 # Headline Optimiser (Chrome extension)
 
-Reads the article from the CMS **`Enter_Body`** field and suggests four SEO-backed headlines, one for each surface:
+Reads the article from the CMS **`Enter_Body`** field and suggests five or six SEO-backed headlines: one each for Search, Data-driven and Explainer, and two or three for Discover, each with a different angle.
 
 | Strategy | Built for | Rules it follows |
 | --- | --- | --- |
 | **Search** | Google Search | Primary keyword in the first five words, 50–65 characters, phrased like the query people type |
-| **Discover** | Google Discover | A specific human or "what it means for you" angle, 60–100 characters, no clickbait that Discover penalises |
+| **Discover** (2–3) | Google Discover | Each takes a different angle, such as reader impact, human story, surprising detail or what's next. 60–100 characters, no clickbait that Discover penalises |
 | **Data-driven** | Both | Leads with the strongest number in the article, and only numbers that are in it |
 | **Explainer** | People Also Ask, voice search | What / Why / How framing that the article actually answers |
 
-Each suggestion shows its character count against the target, the keyword it targets, a one-line reason and any risk. It also returns a primary keyword, related keywords, a URL slug and a meta description.
+Each suggestion shows its angle, its character count against the target, the keyword it targets, a one-line reason and any risk. It also returns a primary keyword, related keywords, a URL slug and a meta description.
 
 Headlines come out in the article's language. Hindi articles get Devanagari headlines, with English search terms such as "RBI repo rate" kept in English. The model is told never to invent facts or numbers. Still check every headline before publishing.
+
+## Look
+
+The popup and settings page use a pink kawaii theme. A kitten mascot with a bow sits in the header, and the background is a pattern of tumblers with lids and straws, bows, hearts, kittens and sparkles. There is a plum version for dark mode. The mascot and tumblers are original drawings with no brand logos, in `assets/kitty.svg` and `assets/pattern.svg`.
 
 ## Install
 
@@ -63,6 +67,8 @@ options.html/.js  settings
 lib/claude.js     prompt, JSON schema, request and response handling
 lib/page.js       functions injected into the CMS page to read the body and fill the headline
 lib/settings.js   settings storage
+assets/           mascot and background pattern (SVG)
+icons/            toolbar icons
 ```
 
 ## Security note

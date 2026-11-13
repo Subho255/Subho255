@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 104">
+  <!-- Original kawaii kitten mascot: white face, pink bow, small smile. -->
+  <g stroke="#3a2a33" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M22 46 L20 10 Q21 6 25 8 L52 26 Z" fill="#fff"/>
+    <path d="M98 46 L100 10 Q99 6 95 8 L68 26 Z" fill="#fff"/>
+    <path d="M27 18 L28 36 L42 27 Z" fill="#ffc2d6" stroke="none"/>
+    <path d="M93 18 L92 36 L78 27 Z" fill="#ffc2d6" stroke="none"/>
+    <ellipse cx="60" cy="62" rx="48" ry="38" fill="#fff"/>
+  </g>
+  <ellipse cx="41" cy="61" rx="4.2" ry="5.8" fill="#3a2a33"/>
+  <ellipse cx="79" cy="61" rx="4.2" ry="5.8" fill="#3a2a33"/>
+  <circle cx="42.4" cy="58.6" r="1.4" fill="#fff"/>
+  <circle cx="80.4" cy="58.6" r="1.4" fill="#fff"/>
+  <ellipse cx="29" cy="74" rx="7.5" ry="4.5" fill="#ffb3cc" opacity="0.8"/>
+  <ellipse cx="91" cy="74" rx="7.5" ry="4.5" fill="#ffb3cc" opacity="0.8"/>
+  <path d="M56.5 68.5 Q60 66 63.5 68.5 Q60 72.5 56.5 68.5 Z" fill="#ff7fa8"/>
+  <path d="M54 74 Q57 78 60 74.5 Q63 78 66 74" fill="none" stroke="#3a2a33" stroke-width="2.2" stroke-linecap="round"/>
+  <g stroke="#3a2a33" stroke-width="2.2" stroke-linecap="round">
+    <line x1="4" y1="62" x2="20" y2="65"/>
+    <line x1="3" y1="72" x2="20" y2="71"/>
+    <line x1="116" y1="62" x2="100" y2="65"/>
+    <line x1="117" y1="72" x2="100" y2="71"/>
+  </g>
+  <!-- Bow on the left ear -->
+  <g stroke="#3a2a33" stroke-width="2.6" stroke-linejoin="round">
+    <path d="M30 26 Q10 8 8 24 Q6 40 30 30 Z" fill="#ff5c93"/>
+    <path d="M30 26 Q44 4 54 16 Q60 28 30 30 Z" fill="#ff5c93"/>
+    <circle cx="30" cy="28" r="6" fill="#ff8fb3"/>
+  </g>
+  <path d="M27.5 27.2 a1.9 1.9 0 0 1 2.5 -1.6 a1.9 1.9 0 0 1 2.5 1.6 q0 1.8 -2.5 3.4 q-2.5 -1.6 -2.5 -3.4 z" fill="#fff"/>
+</svg>

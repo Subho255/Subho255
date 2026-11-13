@@ -122,6 +122,7 @@ function showResult(r) {
     const tag = node.querySelector('.tag');
     tag.textContent = LABELS[h.strategy] ?? h.strategy;
     tag.classList.add(h.strategy);
+    node.querySelector('.angle').textContent = h.angle ?? '';
 
     const n = charCount(h.headline);
     const [lo, hi] = TARGETS[h.strategy] ?? [0, 999];

@@ -9,15 +9,16 @@ export const STRATEGIES = ['search', 'discover', 'data', 'explainer'];
 
 const SYSTEM_PROMPT = `You are a senior SEO and audience editor at a large digital news publisher. You write headlines that earn clicks from Google Search and Google Discover without misleading readers.
 
-Write exactly four headlines for the article, one for each strategy, in this order:
+Write five or six headlines for the article, grouped by strategy in this order: one search, two or three discover, one data and one explainer.
 
 1. "search": Google Search / SEO.
    - Put the primary keyword or entity in the first five words.
    - Aim for 50-65 characters so it is not cut off in results.
    - Mirror how readers phrase the query. Add a year, place or other qualifier when people would search with it.
-2. "discover": Google Discover.
-   - A specific, compelling human, consequence or "what it means for you" angle. 60-100 characters is fine.
-   - It must still name the subject.
+2. "discover": Google Discover. Write two or three, each with a clearly different angle.
+   - Pick from angles such as reader impact ("what it means for you"), human or emotional, a surprising specific detail, or what happens next. Write three when the article supports three distinct angles, otherwise two.
+   - Each must be specific and compelling, and still name the subject. 60-100 characters is fine.
+   - Don't write the same headline twice with different words.
    - Follow Google's Discover policies: no withholding the key fact ("you won't believe", "this one thing"), no exaggeration, no sensational or shock framing.
 3. "data": Data-driven.
    - Lead with the strongest number in the article: an amount, percentage, count, rank, date or record.
@@ -41,6 +42,7 @@ Also return:
 - meta_description: up to 155 characters, in the article's language, with the primary keyword.
 
 For each headline give:
+- angle: a 2-4 word label for its angle, in English (e.g. "Keyword first", "Reader impact", "Human story", "Surprising detail", "What's next", "Lead number", "Why it matters").
 - focus_keyword: the term it targets.
 - rationale: one sentence on why it works on that surface.
 - caution: one short sentence on any risk, or an empty string.`;
@@ -48,9 +50,10 @@ For each headline give:
 const HEADLINE_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['strategy', 'headline', 'focus_keyword', 'rationale', 'caution'],
+  required: ['strategy', 'angle', 'headline', 'focus_keyword', 'rationale', 'caution'],
   properties: {
     strategy: { type: 'string', enum: STRATEGIES },
+    angle: { type: 'string' },
     headline: { type: 'string' },
     focus_keyword: { type: 'string' },
     rationale: { type: 'string' },
@@ -93,7 +96,7 @@ export function buildRequest({ model, article, focusKeyword = '', currentHeadlin
   const parts = [`<article>\n${text}\n</article>`];
   if (focusKeyword.trim()) parts.push(`Focus keyword from the editor: ${focusKeyword.trim()}`);
   if (currentHeadline.trim()) parts.push(`Current headline: ${currentHeadline.trim()}`);
-  parts.push('Write the four headlines.');
+  parts.push('Write the headlines.');
 
   const body = {
     model,
@@ -138,10 +141,10 @@ export function parseResponse(data) {
   } catch {
     throw new HeadlineError('The response was not valid JSON. Try again.');
   }
-  // Keep the strategy order fixed, whatever order the model returned.
-  result.headlines = STRATEGIES
-    .map((s) => result.headlines.find((h) => h.strategy === s))
-    .filter(Boolean);
+  // Group by strategy in a fixed order: one each, except up to three for Discover.
+  result.headlines = STRATEGIES.flatMap((s) => result.headlines
+    .filter((h) => h.strategy === s)
+    .slice(0, s === 'discover' ? 3 : 1));
   result.model = data.model;
   result.usage = data.usage;
   return result;
