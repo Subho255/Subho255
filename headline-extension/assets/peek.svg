@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 104">
+  <!-- Original kitten peeking over an edge: head on top, two paws gripping the line at y=96. -->
+  <g stroke="#7d2245" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M42 50 L38 10 Q39 4 45 7 L76 26 Z" fill="#fff"/>
+    <path d="M128 50 L132 10 Q131 4 125 7 L94 26 Z" fill="#fff"/>
+    <path d="M47 18 L49 38 L64 28 Z" fill="#ffc2d6" stroke="none"/>
+    <path d="M123 18 L121 38 L106 28 Z" fill="#ffc2d6" stroke="none"/>
+    <path d="M26 96 Q22 52 52 34 Q85 18 118 34 Q148 52 144 96 Z" fill="#fff"/>
+  </g>
+  <ellipse cx="66" cy="62" rx="4.6" ry="6.4" fill="#3a1a28"/>
+  <ellipse cx="104" cy="62" rx="4.6" ry="6.4" fill="#3a1a28"/>
+  <circle cx="67.6" cy="59.4" r="1.6" fill="#fff"/>
+  <circle cx="105.6" cy="59.4" r="1.6" fill="#fff"/>
+  <ellipse cx="52" cy="76" rx="8" ry="4.6" fill="#ffb3cc" opacity="0.85"/>
+  <ellipse cx="118" cy="76" rx="8" ry="4.6" fill="#ffb3cc" opacity="0.85"/>
+  <path d="M81 70 Q85 67.4 89 70 Q85 74.6 81 70 Z" fill="#ff7fa8"/>
+  <path d="M79 76.5 Q82 80 85 76.8 Q88 80 91 76.5" fill="none" stroke="#7d2245" stroke-width="2.4" stroke-linecap="round"/>
+  <g stroke="#7d2245" stroke-width="2.6" stroke-linecap="round">
+    <line x1="8" y1="62" x2="30" y2="66"/>
+    <line x1="6" y1="74" x2="29" y2="73"/>
+    <line x1="162" y1="62" x2="140" y2="66"/>
+    <line x1="164" y1="74" x2="141" y2="73"/>
+  </g>
+  <!-- Bow -->
+  <g stroke="#7d2245" stroke-width="3" stroke-linejoin="round">
+    <path d="M52 24 Q30 4 27 22 Q25 40 52 30 Z" fill="#ff5c86"/>
+    <path d="M52 24 Q66 0 78 13 Q86 27 52 30 Z" fill="#ff5c86"/>
+    <circle cx="52" cy="27" r="7" fill="#ff8fab"/>
+  </g>
+  <path d="M49 26 a2.1 2.1 0 0 1 3 -1.8 a2.1 2.1 0 0 1 3 1.8 q0 2 -3 3.8 q-3 -1.8 -3 -3.8 z" fill="#fff"/>
+  <!-- Paws over the edge -->
+  <g fill="#fff" stroke="#7d2245" stroke-width="3.2" stroke-linejoin="round">
+    <path d="M40 104 V94 Q40 82 54 82 Q68 82 68 94 V104 Z"/>
+    <path d="M102 104 V94 Q102 82 116 82 Q130 82 130 94 V104 Z"/>
+  </g>
+  <g stroke="#7d2245" stroke-width="2.2" stroke-linecap="round">
+    <line x1="50" y1="96" x2="50" y2="101"/><line x1="58" y1="96" x2="58" y2="101"/>
+    <line x1="112" y1="96" x2="112" y2="101"/><line x1="120" y1="96" x2="120" y2="101"/>
+  </g>
+</svg>

@@ -6,67 +6,68 @@
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <header>
-    <div class="brand">
-      <img src="assets/kitty.svg" alt="" class="mascot">
-      <div>
-        <h1>Headline Optimiser</h1>
-        <p class="tagline">Search · Discover · Data · Explainer</p>
-      </div>
-    </div>
-    <button id="settings" class="icon" title="Settings" aria-label="Settings">
-      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L15 3.5h-4L10.7 6a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
-    </button>
-  </header>
+  <div class="panel">
+    <img src="assets/peek.svg" alt="" class="peek">
+    <header class="band">
+      <button id="settings" class="icon" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.5 7.5 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1L15 3.5h-4L10.7 6a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.5 7.5 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg>
+      </button>
+      <h1><svg class="heart" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 20 C4 14 1.5 10.5 1.5 6.8 A5.3 5.3 0 0 1 12 4.6 A5.3 5.3 0 0 1 22.5 6.8 C22.5 10.5 20 14 12 20 Z"/></svg><span>Headline Optimiser</span><svg class="heart" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 20 C4 14 1.5 10.5 1.5 6.8 A5.3 5.3 0 0 1 12 4.6 A5.3 5.3 0 0 1 22.5 6.8 C22.5 10.5 20 14 12 20 Z"/></svg></h1>
+      <p class="tagline">Search · Discover · Data · Explainer</p>
+    </header>
 
-  <section id="setup" hidden>
-    <p>Add your Anthropic API key to get started.</p>
-    <button id="open-settings" class="primary">Open settings</button>
-  </section>
-
-  <main id="main" hidden>
-    <p id="source" class="muted"></p>
-
-    <form id="form">
-      <label for="keyword">Focus keyword <span class="muted">(optional)</span></label>
-      <div class="row">
-        <input id="keyword" type="text" placeholder="e.g. RBI repo rate" autocomplete="off">
-        <button id="generate" type="submit" class="primary">Suggest headlines</button>
-      </div>
-    </form>
-
-    <div id="loading" class="loading" hidden>
-      <svg class="spinner" viewBox="-12 -6 24 26" aria-hidden="true"><path d="M0 4 C-8 -4 -14 2 -10 8 L0 18 L10 8 C14 2 8 -4 0 4 Z" fill="currentColor"/></svg>
-      <span>Reading the article and drafting headlines… usually 15–30 seconds.</span>
-    </div>
-    <p id="error" class="error" hidden></p>
-
-    <div id="results" hidden>
-      <div id="feedback" class="feedback" hidden></div>
-      <div id="cards"></div>
-
-      <section class="seo">
-        <h2>SEO extras</h2>
-        <div class="kv">
-          <span class="k">Primary keyword</span>
-          <div id="primary" class="chips"></div>
-        </div>
-        <div class="kv">
-          <span class="k">Related keywords</span>
-          <div id="secondary" class="chips"></div>
-        </div>
-        <div class="kv">
-          <span class="k">URL slug</span>
-          <div class="copyline"><code id="slug"></code><button class="link" data-copy="slug">Copy</button></div>
-        </div>
-        <div class="kv">
-          <span class="k">Meta description <span id="meta-count" class="muted"></span></span>
-          <div class="copyline"><span id="meta"></span><button class="link" data-copy="meta">Copy</button></div>
-        </div>
+    <div class="panel-body">
+      <section id="setup" hidden>
+        <p>Add your Anthropic API key to get started.</p>
+        <button id="open-settings" class="primary">Open settings</button>
       </section>
-      <p id="meta-info" class="muted small"></p>
+
+      <div id="main" hidden>
+        <p id="source"></p>
+        <form id="form">
+          <label for="keyword">Focus keyword <span class="muted">(optional)</span></label>
+          <input id="keyword" type="text" placeholder="e.g. RBI repo rate" autocomplete="off">
+          <button id="generate" type="submit" class="primary">Suggest headlines</button>
+        </form>
+        <div id="loading" class="loading" hidden>
+          <svg class="spinner" viewBox="-12 -6 24 26" aria-hidden="true"><path d="M0 4 C-8 -4 -14 2 -10 8 L0 18 L10 8 C14 2 8 -4 0 4 Z" fill="currentColor"/></svg>
+          <span>Reading the article and drafting headlines… usually 15–30 seconds.</span>
+        </div>
+        <p id="error" class="error" hidden></p>
+      </div>
     </div>
-  </main>
+  </div>
+
+  <div id="empty" hidden>
+    <img src="assets/hug.svg" alt="">
+    <p>Your headlines will show up here.</p>
+  </div>
+
+  <div id="results" hidden>
+    <div id="feedback" class="feedback" hidden></div>
+    <div id="cards"></div>
+
+    <section class="seo">
+      <h2>SEO extras</h2>
+      <div class="kv">
+        <span class="k">Primary keyword</span>
+        <div id="primary" class="chips"></div>
+      </div>
+      <div class="kv">
+        <span class="k">Related keywords</span>
+        <div id="secondary" class="chips"></div>
+      </div>
+      <div class="kv">
+        <span class="k">URL slug</span>
+        <div class="copyline"><code id="slug"></code><button class="link" data-copy="slug">Copy</button></div>
+      </div>
+      <div class="kv">
+        <span class="k">Meta description <span id="meta-count" class="muted"></span></span>
+        <div class="copyline"><span id="meta"></span><button class="link" data-copy="meta">Copy</button></div>
+      </div>
+    </section>
+    <p id="meta-info" class="muted small"></p>
+  </div>
 
   <template id="card-tpl">
     <article class="card">

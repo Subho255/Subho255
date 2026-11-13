@@ -15,7 +15,16 @@ Headlines come out in the article's language. Hindi articles get Devanagari head
 
 ## Look
 
-The popup and settings page use a pink kawaii theme. A kitten mascot with a bow sits in the header, and the background is kittens and tumblers (with lids and straws) peeking in from the left and right edges. The cards are opaque so text stays easy to read. There is a plum version for dark mode. The mascot and tumblers are original drawings with no brand logos, in `assets/kitty.svg` and `assets/side.svg`.
+The popup and settings page use a pink kawaii theme:
+
+- a pink gingham background
+- a kitten peeking over the top of the main panel, with its paws on the edge
+- a bold rounded title (Fredoka, bundled under the SIL Open Font License) between outline hearts, and a scalloped title band
+- opaque cards with maroon outlines, so text stays easy to read
+- kittens and tumblers peeking in from the left and right edges
+- a kitten hugging a tumbler, shown until headlines arrive
+
+There is a plum version for dark mode. All artwork is original, with no brand logos, in `assets/`.
 
 ## Install
 
@@ -67,7 +76,8 @@ options.html/.js  settings
 lib/claude.js     prompt, JSON schema, request and response handling
 lib/page.js       functions injected into the CMS page to read the body and fill the headline
 lib/settings.js   settings storage
-assets/           mascot and side-edge artwork (SVG)
+assets/           peeking kitten, hugging kitten, side-edge artwork, icon source (SVG)
+fonts/            Fredoka (OFL) for headings and buttons
 icons/            toolbar icons
 ```
 

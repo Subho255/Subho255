@@ -25,6 +25,7 @@ async function init() {
     return;
   }
   $('main').hidden = false;
+  $('empty').hidden = false;
 
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   await readPage();
@@ -100,6 +101,8 @@ function render(entry) {
   $('generate').disabled = loading || !page.text;
   $('error').hidden = entry.status !== 'error';
   $('error').textContent = entry.message ?? '';
+  // The illustration fills the space until there are results.
+  $('empty').hidden = loading || entry.status === 'done' || !$('results').hidden;
   if (entry.status !== 'done') {
     if (!loading) return;
     $('results').hidden = true;

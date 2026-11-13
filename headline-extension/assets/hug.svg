@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 170">
+  <!-- Original kitten hugging an unbranded tumbler, eyes closed and happy. -->
+  <g stroke="#7d2245" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- body -->
+    <path d="M58 168 Q46 120 82 104 H138 Q172 120 160 168 Z" fill="#fff"/>
+    <path d="M78 168 Q76 140 92 128 H128 Q144 140 140 168 Z" fill="#ff8fab"/>
+    <!-- ears and head -->
+    <path d="M60 60 L56 18 Q57 12 63 15 L94 34 Z" fill="#fff"/>
+    <path d="M152 60 L156 18 Q155 12 149 15 L118 34 Z" fill="#fff"/>
+    <ellipse cx="106" cy="72" rx="58" ry="44" fill="#fff"/>
+  </g>
+  <path d="M65 26 L67 46 L82 36 Z" fill="#ffc2d6"/>
+  <path d="M147 26 L145 46 L130 36 Z" fill="#ffc2d6"/>
+  <!-- happy closed eyes -->
+  <g fill="none" stroke="#3a1a28" stroke-width="3.4" stroke-linecap="round">
+    <path d="M76 72 Q84 64 92 72"/>
+    <path d="M120 72 Q128 64 136 72"/>
+  </g>
+  <ellipse cx="72" cy="86" rx="8.5" ry="5" fill="#ffb3cc"/>
+  <ellipse cx="140" cy="86" rx="8.5" ry="5" fill="#ffb3cc"/>
+  <path d="M102 81 Q106 78.4 110 81 Q106 85.6 102 81 Z" fill="#ff7fa8"/>
+  <path d="M100 88 Q103 91.5 106 88.3 Q109 91.5 112 88" fill="none" stroke="#7d2245" stroke-width="2.4" stroke-linecap="round"/>
+  <g stroke="#7d2245" stroke-width="2.6" stroke-linecap="round">
+    <line x1="26" y1="72" x2="50" y2="76"/><line x1="24" y1="85" x2="49" y2="84"/>
+    <line x1="186" y1="72" x2="162" y2="76"/><line x1="188" y1="85" x2="163" y2="84"/>
+  </g>
+  <!-- bow -->
+  <g stroke="#7d2245" stroke-width="3" stroke-linejoin="round">
+    <path d="M70 32 Q48 12 45 30 Q43 48 70 38 Z" fill="#ff5c86"/>
+    <path d="M70 32 Q84 8 96 21 Q104 35 70 38 Z" fill="#ff5c86"/>
+    <circle cx="70" cy="35" r="7" fill="#ff8fab"/>
+  </g>
+  <!-- tumbler in front -->
+  <g stroke="#7d2245" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M124 98 L134 80" stroke-width="7"/>
+    <path d="M124 98 L134 80" stroke="#ffd6e2" stroke-width="3.6"/>
+    <path d="M128 118 Q146 118 146 133 Q146 148 126 148" fill="none" stroke-width="7"/>
+    <path d="M128 118 Q146 118 146 133 Q146 148 126 148" fill="none" stroke="#ff9dba" stroke-width="3"/>
+    <path d="M86 108 H132 L126 166 H92 Z" fill="#ff9dba"/>
+    <rect x="82" y="96" width="54" height="13" rx="5" fill="#f4eef1"/>
+    <rect x="85" y="107" width="48" height="5" fill="#c9b8c1" stroke-width="2"/>
+  </g>
+  <path d="M95 120 V156" stroke="#fff" stroke-width="3.4" stroke-linecap="round" opacity="0.6"/>
+  <!-- paws hugging the cup -->
+  <g fill="#fff" stroke="#7d2245" stroke-width="3" stroke-linejoin="round">
+    <ellipse cx="86" cy="134" rx="13" ry="11"/>
+    <ellipse cx="132" cy="140" rx="13" ry="11"/>
+  </g>
+</svg>
