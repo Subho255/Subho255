@@ -1,9 +1,9 @@
-/* Kawaii pink theme: kitten mascot, bows, hearts and tumblers in the background. */
+/* Kawaii pink theme. Opaque cards; kittens and tumblers peek in from the side edges. */
 :root {
   --bg: #fff0f6;
-  --pattern-opacity: 1;
-  --surface: rgba(255, 255, 255, 0.84);
-  --surface-2: rgba(255, 247, 251, 0.96);
+  --edge-opacity: 1;
+  --surface: #ffffff;
+  --surface-2: #fff7fb;
   --border: #ffc9dc;
   --shadow: 0 3px 0 #ffd6e5, 0 6px 16px rgba(255, 92, 147, 0.12);
   --text: #3a2a33;
@@ -28,9 +28,9 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #2a1622;
-    --pattern-opacity: 0.38;
-    --surface: rgba(58, 32, 47, 0.86);
-    --surface-2: rgba(70, 38, 57, 0.96);
+    --edge-opacity: 0.85;
+    --surface: #3a202f;
+    --surface-2: #462639;
     --border: #6b3a5a;
     --shadow: 0 3px 0 #4a2540, 0 6px 16px rgba(0, 0, 0, 0.3);
     --text: #ffe8f1;
@@ -60,22 +60,28 @@ body {
   position: relative;
   width: 440px;
   margin: 0;
-  padding: 16px 20px 18px;
+  padding: 16px 30px 18px;
   background: var(--bg);
   color: var(--text);
   font: 13px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif;
 }
 
-/* Background pattern of tumblers, bows, hearts and kittens. */
-body::before {
+/* Kittens and tumblers peeking in from the left and right edges. The strip's centre line
+   sits on the window edge, so each drawing is half hidden. The right strip is mirrored and
+   offset so the two sides don't line up. */
+body::before, body::after {
   content: "";
   position: fixed;
-  inset: 0;
+  top: 0;
+  bottom: 0;
+  width: 64px;
   z-index: -1;
-  background: url("assets/pattern.svg") 0 0 / 230px repeat;
-  opacity: var(--pattern-opacity);
+  background: url("assets/side.svg") 0 0 / 64px 340px repeat-y;
+  opacity: var(--edge-opacity);
   pointer-events: none;
 }
+body::before { left: -32px; }
+body::after { right: -32px; transform: scaleX(-1); background-position: 0 170px; }
 
 header {
   display: flex; align-items: center; justify-content: space-between;
@@ -138,8 +144,7 @@ input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1p
 
 .card {
   background: var(--surface); border: 1.5px solid var(--border); border-radius: 16px;
-  padding: 11px 13px; margin-bottom: 14px; box-shadow: var(--shadow);
-  backdrop-filter: blur(1.5px);
+  padding: 11px 13px; margin-bottom: 12px; box-shadow: var(--shadow);
 }
 .card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
 .label { display: flex; align-items: center; gap: 6px; min-width: 0; }
