@@ -57,7 +57,10 @@ async function readPage() {
     }
   }
   const frames = results.map((r) => r.result).filter(Boolean);
-  page = frames.find((r) => r.found && r.text) ?? frames.find((r) => r.found) ?? { found: false, text: '' };
+  page = frames.find((r) => r.found && !r.guessed && r.text)
+    ?? frames.find((r) => r.found && r.text)
+    ?? frames.find((r) => r.found)
+    ?? { found: false, text: '' };
   page.headline = frames.find((r) => r.headlineFound)?.headline ?? '';
   page.headlineFound = frames.some((r) => r.headlineFound);
 
@@ -67,7 +70,7 @@ async function readPage() {
     setSource(`Found "${settings.bodyField}", but it's empty. Write or paste the article first.`, true);
   } else {
     const words = page.text.split(/\s+/).filter(Boolean).length;
-    setSource(`Read ${words.toLocaleString()} words from ${settings.bodyField} (${page.source}).`);
+    setSource(`Read ${words.toLocaleString()} words from ${page.source}.`);
   }
 }
 

@@ -34,19 +34,20 @@ You can close the popup while it works. The request runs in the background, and 
 | --- | --- | --- |
 | API key | — | Stored in `chrome.storage.local`, so it stays in this Chrome profile and is never synced. It is sent only to `api.anthropic.com`. |
 | Model | Claude Opus 5.5 | Sonnet 5.5 and Haiku 5.5 are faster and cheaper. |
-| Article body field | `Enter_Body` | Matches by ID or name. IDs that end with it also match, such as `ctl00_Main_Enter_Body`. |
+| Article body field | `Enter_Body` | Matched by ID or name, or by a visible label with this text. See below. |
 | Headline field | empty | Set it to the CMS headline field's ID or name. The extension then critiques the current headline, and each suggestion gets a **Use** button that fills the field. |
 
-## Which editors it reads
+## How it finds the article
 
-The body field can be any of these:
+It looks for the body field in this order:
 
-- a plain `<textarea>` or `<input>`. HTML in it is converted to text.
-- a `contenteditable` element
-- a TinyMCE editor (`Enter_Body_ifr` iframe)
-- a CKEditor 4 editor (`cke_Enter_Body`) or a CKEditor 5 editor
+1. **By ID or name:** an element whose ID or name is `Enter_Body`, or ends with it, such as `ctl00_Main_Enter_Body`. TinyMCE (`Enter_Body_ifr`) and CKEditor (`cke_Enter_Body`) wrappers count.
+2. **By label:** page-builder CMSs often show an "Enter_Body" label above each body block. The extension finds every such label and reads the editor in the same block, joining the blocks in page order. A hidden textarea, which only updates on save, is ignored. So are other editors, such as a summary box.
+3. **Fallback:** if neither matches, it reads the editor with the most text. The popup then says *"the largest editor on the page ("Enter_Body" not found)"*, so you know it guessed.
 
-Rich editors are read from their live editing area, not the hidden textarea, which is only updated on save. If your CMS uses something else, open DevTools, find the element that holds the article text, and put its ID or name in Settings.
+Supported editors: CKEditor 4 (iframe or inline), CKEditor 5, TinyMCE, any `contenteditable` element, and plain textareas or inputs. HTML in a textarea is converted to text.
+
+The popup always says where it read from, for example *"Read 706 words from 2 Enter_Body blocks (CKEditor)."*
 
 ## Cost
 
