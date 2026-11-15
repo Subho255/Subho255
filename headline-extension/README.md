@@ -13,6 +13,19 @@ Each suggestion shows its angle, its character count against the target, the key
 
 Headlines come out in the article's language. Hindi articles get Devanagari headlines, with English search terms such as "RBI repo rate" kept in English. The model is told never to invent facts or numbers. Still check every headline before publishing.
 
+## Data insights
+
+When the article contains tables, the popup adds a **Data insights** card with 2–3 pointers the author can use as a subhead, fact box or chart idea. Each one shows the evidence (the exact numbers), the method, a confidence level and a caveat.
+
+How it stays accurate:
+
+1. **Real tables.** The extension reads the HTML tables in the editor, fills in merged cells and multi-row headers, and uses the heading above each table as its caption.
+2. **Numbers computed in code, not by the model** (`lib/stats.js`). It detects whether years run across or down the table, then computes for each series: mean, median, change, % change, CAGR, trend per year and its R², whether it rose or fell every year, the biggest single move, outliers, share of total, and which series moved in opposite directions. Percentage columns get changes in percentage points. Columns with mixed units are skipped rather than averaged.
+3. **Extrapolation is gated.** A projection is offered only with at least 5 evenly spaced points and a steady trend (R² ≥ 0.85), only one period ahead, and never below zero for counts. Otherwise the stats say why not, and the model is told not to project.
+4. **The model interprets.** It gets the table and the exact stats, may quote only those numbers, and chooses the method that fits: the median for skewed data, CAGR for multi-year growth, divergence when series move apart. It reads direction for the metric (a falling closing rank means more demand) and frames any explanation as a possibility, with a caveat that the data show a pattern, not a cause.
+
+If there's no table, the card stays hidden. If the tables don't support anything meaningful, it says so instead of padding.
+
 ## Look
 
 The popup and settings page use a pink kawaii theme:
@@ -91,7 +104,7 @@ The popup always says where it read from, for example *"Read 706 words from 2 En
 
 ## Cost
 
-One run on Opus 5.5 uses roughly 2–4k tokens, which is about US$0.04–0.08. Haiku 5.5 costs a small fraction of that.
+One run on Opus 5.5 uses roughly 2–4k tokens, which is about US$0.04–0.08. Articles with tables use more thinking for the insights, roughly US$0.08–0.15. Haiku 5.5 costs a small fraction of that.
 
 ## Files
 
@@ -102,7 +115,8 @@ popup.html/.js/.css  the panel
 options.html/.js  settings
 lib/claude.js     prompt, JSON schema, request and response handling (shared with the server)
 lib/server.js     Google sign-in through the company server, and server requests
-lib/page.js       functions injected into the CMS page to read the body and fill the headline
+lib/page.js       functions injected into the CMS page to read the body and tables, and fill the headline
+lib/stats.js      exact statistics for tables (shared with the server)
 lib/settings.js   settings storage
 assets/           peeking kitten, hugging kitten, side-edge artwork, icon source (SVG)
 fonts/            Fredoka (OFL) for headings and buttons

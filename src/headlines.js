@@ -29,7 +29,9 @@ export function headlineService({ client, model = DEFAULT_MODEL }) {
     const focusKeyword = String(input?.focusKeyword ?? '').slice(0, MAX_FIELD);
     const currentHeadline = String(input?.currentHeadline ?? '').slice(0, MAX_FIELD);
 
-    const { headers, body } = buildRequest({ model, article, focusKeyword, currentHeadline });
+    // Tables are trimmed to size and analysed inside buildRequest (headline-extension/lib/stats.js).
+    const tables = Array.isArray(input?.tables) ? input.tables : [];
+    const { headers, body } = buildRequest({ model, article, focusKeyword, currentHeadline, tables });
     const betas = headers['anthropic-beta'] ? [headers['anthropic-beta']] : undefined;
     const message = await client.beta.messages.create({ ...body, ...(betas ? { betas } : {}) });
     return parseResponse(message);

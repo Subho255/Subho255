@@ -114,7 +114,7 @@ body::before { left: -32px; }
 body::after { right: -32px; transform: scaleX(-1); background-position: 0 210px; }
 
 /* Shared outlined box (also used by the settings page). */
-.box, .panel, .card, .feedback, .seo {
+.box, .panel, .card, .feedback, .seo, .insights {
   background: var(--surface);
   border: 3px solid var(--line);
   border-radius: 22px;
@@ -237,6 +237,26 @@ input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1p
 .actions { display: flex; gap: 2px; flex: none; }
 
 .seo { padding: 11px 14px; border-radius: 20px; }
+
+/* Data insights */
+.insights { padding: 11px 14px 4px; border-radius: 20px; margin-bottom: 12px; }
+.insights h2 { display: flex; align-items: center; gap: 6px; }
+.chart-icon { width: 18px; height: 18px; color: var(--accent); }
+.insight { padding: 4px 0 10px; }
+.insight + .insight { border-top: 1.5px dashed var(--border); padding-top: 10px; }
+.insight-head { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 5px; }
+.method, .confidence { font: 600 11px var(--display); padding: 2px 9px; border-radius: 99px; }
+.method { background: var(--tag-search); color: var(--tag-search-text); }
+.confidence.high { background: var(--tag-data); color: var(--tag-data-text); }
+.confidence.medium { background: var(--tag-explainer); color: var(--tag-explainer-text); }
+.confidence.low { background: var(--tag-discover); color: var(--tag-discover-text); }
+.insight-text { font-size: 14px; font-weight: 700; line-height: 1.4; margin: 0 0 5px; }
+.evidence { margin: 0 0 4px; font-size: 12px; font-variant-numeric: tabular-nums; background: var(--surface-2); border: 1.5px solid var(--border); border-radius: 10px; padding: 5px 8px; }
+.context { margin: 0; color: var(--muted); }
+.insight .caveat { margin: 5px 0 0; color: var(--warn); font-size: 12px; }
+#insight-note { margin: 0 0 8px; }
+.insight .use-as { white-space: normal; }
+.insight .card-foot { border-top: 0; padding-top: 2px; }
 .kv { margin-bottom: 9px; }
 .kv:last-child { margin-bottom: 0; }
 .k { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 3px; }

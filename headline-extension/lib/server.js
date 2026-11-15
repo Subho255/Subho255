@@ -55,13 +55,13 @@ export async function signIn(serverUrl) {
 }
 
 /** Sends the article to the company server and returns the same result shape as direct mode. */
-export async function suggestViaServer({ serverUrl, token, article, focusKeyword, currentHeadline }) {
+export async function suggestViaServer({ serverUrl, token, article, tables, focusKeyword, currentHeadline }) {
   let res;
   try {
     res = await fetch(`${serverUrl}/api/ext/headlines`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
-      body: JSON.stringify({ article, focusKeyword, currentHeadline }),
+      body: JSON.stringify({ article, tables, focusKeyword, currentHeadline }),
     });
   } catch {
     throw new HeadlineError('Could not reach the company server. Check your connection.');

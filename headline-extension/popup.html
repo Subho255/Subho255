@@ -52,6 +52,15 @@
     <div id="feedback" class="feedback" hidden></div>
     <div id="cards"></div>
 
+    <section id="insights" class="insights" hidden>
+      <h2>
+        <svg class="chart-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        Data insights
+      </h2>
+      <div id="insight-list"></div>
+      <p id="insight-note" class="muted" hidden></p>
+    </section>
+
     <section class="seo">
       <h2>SEO extras</h2>
       <div class="kv">
@@ -73,6 +82,20 @@
     </section>
     <p id="meta-info" class="muted small"></p>
   </div>
+
+  <template id="insight-tpl">
+    <article class="insight">
+      <div class="insight-head"><span class="method"></span><span class="confidence"></span></div>
+      <p class="insight-text"></p>
+      <p class="evidence"></p>
+      <p class="context"></p>
+      <p class="caveat" hidden></p>
+      <div class="card-foot">
+        <span class="kw use-as"></span>
+        <span class="actions"><button class="link copy">Copy</button></span>
+      </div>
+    </article>
+  </template>
 
   <template id="card-tpl">
     <article class="card">

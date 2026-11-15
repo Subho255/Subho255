@@ -118,22 +118,88 @@ export function readField(bodyField, headlineField) {
     return best ? [best] : null;
   }
 
+  // The element whose contents hold the article (an editor iframe's body, the editable
+  // element itself, or parsed textarea HTML), for finding tables.
+  function contentRoot(el) {
+    if (el.tagName === 'IFRAME') {
+      try { return el.contentDocument?.body ?? null; } catch { return null; }
+    }
+    if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
+      return new DOMParser().parseFromString(el.value || '', 'text/html').body;
+    }
+    return el;
+  }
+
+  // A table as a grid of cell texts, with merged cells (rowspan/colspan) filled in so
+  // columns line up.
+  function tableGrid(table) {
+    const grid = [];
+    [...table.rows].slice(0, 80).forEach((tr, r) => {
+      grid[r] = grid[r] || [];
+      let c = 0;
+      for (const cell of tr.cells) {
+        while (grid[r][c] !== undefined) c++;
+        const text = cell.textContent.replace(/\s+/g, ' ').trim();
+        const rs = Math.min(cell.rowSpan || 1, 80);
+        const cs = Math.min(cell.colSpan || 1, 20);
+        for (let i = 0; i < rs; i++) {
+          grid[r + i] = grid[r + i] || [];
+          for (let j = 0; j < cs; j++) grid[r + i][c + j] = text;
+        }
+        c += cs;
+      }
+    });
+    return grid.map((row) => [...row].map((v) => v ?? ''));
+  }
+
+  // The caption, or else the heading or sentence just before the table, which usually says
+  // what the table is ("IIT Bombay closing ranks 2020-2025").
+  function tableCaption(table) {
+    const own = table.caption?.textContent.trim();
+    if (own) return own;
+    let node = table;
+    for (let up = 0; up < 3 && node; up++) {
+      let prev = node.previousElementSibling;
+      for (let k = 0; k < 2 && prev; k++, prev = prev.previousElementSibling) {
+        const t = prev.textContent.replace(/\s+/g, ' ').trim();
+        if (t) return t.slice(0, 160);
+      }
+      node = node.parentElement;
+    }
+    return '';
+  }
+
+  function tablesIn(els) {
+    const out = [];
+    for (const el of els) {
+      const root = contentRoot(el);
+      if (!root) continue;
+      for (const table of root.querySelectorAll('table')) {
+        if (table.querySelector('table')) continue; // layout wrapper around another table
+        const rows = tableGrid(table);
+        if (rows.length >= 2 && rows[0].length >= 2) out.push({ caption: tableCaption(table), rows });
+        if (out.length >= 6) return out;
+      }
+    }
+    return out;
+  }
+
   function readBody(name) {
     const ids = byId(name);
     if (ids) {
       const [el, plain] = ids;
       const text = plain ? el.innerText : editorText(el);
-      return { text, source: `${name} (${plain ? 'page element' : kind(el)})` };
+      return { text, tables: tablesIn([el]), source: `${name} (${plain ? 'page element' : kind(el)})` };
     }
     const labelled = byLabel(name);
     if (labelled) {
       const text = labelled.map(editorText).filter((t) => t && t.trim()).join('\n\n');
       const n = labelled.length;
-      return { text, source: `${n > 1 ? `${n} ${name} blocks` : name} (${kind(labelled[0])})` };
+      return { text, tables: tablesIn(labelled), source: `${n > 1 ? `${n} ${name} blocks` : name} (${kind(labelled[0])})` };
     }
     const largest = largestEditor();
     if (largest) {
-      return { text: editorText(largest[0]), source: `the largest editor on the page ("${name}" not found)`, guessed: true };
+      return { text: editorText(largest[0]), tables: tablesIn(largest), source: `the largest editor on the page ("${name}" not found)`, guessed: true };
     }
     return null;
   }
@@ -146,6 +212,7 @@ export function readField(bodyField, headlineField) {
     found: Boolean(body),
     guessed: Boolean(body?.guessed),
     text: clean(body?.text),
+    tables: body?.tables ?? [],
     source: body?.source ?? '',
     headline: headline.trim(),
     headlineFound: Boolean(headlineEl),

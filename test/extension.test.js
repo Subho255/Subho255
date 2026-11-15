@@ -130,3 +130,20 @@ test('headline errors map to safe HTTP responses', async () => {
   const svc = headlineService({ client: { beta: { messages: { create: async () => ({}) } } } });
   await assert.rejects(svc({ article: 'too short' }), (e) => headlineErrorResponse(e).status === 422);
 });
+
+test('tables reach the prompt as Markdown plus exact stats, with higher effort', async () => {
+  let sent;
+  const reply = { article_language: 'English', primary_keyword: 'k', secondary_keywords: [], headlines: [], url_slug: 's', meta_description: 'm', current_headline_feedback: '', data_insights: [1, 2, 3, 4].map((i) => ({ insight: `i${i}`, evidence: 'e', method: 'm', context: 'c', confidence: 'high', caveat: '', use_as: 'u' })), data_insights_note: '' };
+  const client = { beta: { messages: { create: async (body) => { sent = body; return { model: body.model, stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(reply) }], usage: {} }; } } } };
+  const tables = [{ caption: 'Closing ranks', rows: [['Branch', '2021', '2022', '2023'], ['Civil', '3,812', '3,640', '3,512']] }];
+  const result = await headlineService({ client })({ article: ARTICLE, tables });
+  const prompt = sent.messages[0].content;
+  assert.match(prompt, /<tables>[\s\S]*\| Civil \| 3,812/);
+  assert.match(prompt, /<table_stats>[\s\S]*"change":-300/);
+  assert.equal(sent.output_config.effort, 'high');
+  assert.equal(result.data_insights.length, 3);
+
+  await headlineService({ client })({ article: ARTICLE });
+  assert.equal(sent.output_config.effort, 'medium');
+  assert.match(sent.messages[0].content, /no tables/);
+});

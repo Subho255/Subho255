@@ -95,7 +95,8 @@ async function readPage() {
     setSource(`Found "${settings.bodyField}", but it's empty. Write or paste the article first.`, true);
   } else {
     const words = page.text.split(/\s+/).filter(Boolean).length;
-    setSource(`Read ${words.toLocaleString()} words from ${page.source}.`);
+    const t = page.tables?.length ?? 0;
+    setSource(`Read ${words.toLocaleString()} words${t ? ` and ${t} table${t > 1 ? 's' : ''}` : ''} from ${page.source}.`);
   }
 }
 
@@ -113,6 +114,7 @@ async function onGenerate(event) {
     type: 'generate',
     tabId: tab.id,
     article: page.text,
+    tables: page.tables,
     focusKeyword: $('keyword').value,
     currentHeadline: page.headline,
   });
@@ -180,6 +182,8 @@ function showResult(r) {
     cards.append(node);
   }
 
+  showInsights(r);
+
   chips($('primary'), [r.primary_keyword]);
   chips($('secondary'), r.secondary_keywords);
   $('slug').textContent = r.url_slug;
@@ -189,6 +193,36 @@ function showResult(r) {
   const tokens = r.usage ? (r.usage.input_tokens ?? 0) + (r.usage.output_tokens ?? 0) : 0;
   const who = mode(settings) === 'server' && settings.authEmail ? ` · ${settings.authEmail}` : '';
   $('meta-info').textContent = `${r.model} · ${r.article_language} · ${tokens.toLocaleString()} tokens${who}. Check facts before publishing.`;
+}
+
+const CONFIDENCE = { high: 'High confidence', medium: 'Medium confidence', low: 'Low confidence' };
+
+function showInsights(r) {
+  const items = r.data_insights ?? [];
+  // Hide the section for articles without tables, unless the model found something anyway.
+  $('insights').hidden = !items.length && !(page.tables?.length);
+  $('insight-note').hidden = Boolean(items.length) || !r.data_insights_note;
+  $('insight-note').textContent = r.data_insights_note ?? '';
+  const list = $('insight-list');
+  list.replaceChildren();
+  for (const d of items) {
+    const node = $('insight-tpl').content.cloneNode(true);
+    node.querySelector('.method').textContent = d.method;
+    const conf = node.querySelector('.confidence');
+    conf.textContent = CONFIDENCE[d.confidence] ?? d.confidence;
+    conf.classList.add(d.confidence);
+    node.querySelector('.insight-text').textContent = d.insight;
+    node.querySelector('.evidence').textContent = d.evidence;
+    node.querySelector('.context').textContent = d.context;
+    if (d.caveat) {
+      const c = node.querySelector('.caveat');
+      c.hidden = false;
+      c.textContent = d.caveat;
+    }
+    node.querySelector('.use-as').textContent = d.use_as ? `Use as: ${d.use_as}` : '';
+    node.querySelector('.copy').addEventListener('click', (e) => copy(d.insight, e.currentTarget));
+    list.append(node);
+  }
 }
 
 function chips(el, items) {

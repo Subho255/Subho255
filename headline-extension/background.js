@@ -30,7 +30,7 @@ async function doSignOut() {
   return { ok: true };
 }
 
-async function generate({ tabId, article, focusKeyword, currentHeadline }) {
+async function generate({ tabId, article, tables, focusKeyword, currentHeadline }) {
   const key = `result:${tabId}`;
   await chrome.storage.session.set({ [key]: { status: 'loading', startedAt: Date.now() } });
   let entry;
@@ -41,7 +41,7 @@ async function generate({ tabId, article, focusKeyword, currentHeadline }) {
         ? new SignInRequired('Sign in with your company Google account first.')
         : new HeadlineError('Add your Anthropic API key in Settings first.');
     }
-    const input = { article, focusKeyword, currentHeadline };
+    const input = { article, tables, focusKeyword, currentHeadline };
     const result = mode(s) === 'server'
       ? await suggestViaServer({ serverUrl: s.serverUrl, token: s.authToken, ...input })
       : await suggestHeadlines({ apiKey: s.apiKey, model: s.model, ...input });
