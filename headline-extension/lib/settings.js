@@ -15,7 +15,8 @@ export const DEFAULTS = {
   apiKey: '',
   model: 'claude-opus-5-5',
   // Page fields.
-  bodyField: 'Enter_Body',
+  // Comma-separated: the first one found on the page with article text is used.
+  bodyField: 'Enter_Body, Body, Description',
   headlineField: '',
 };
 
@@ -27,6 +28,8 @@ export const MODELS = [
 
 export async function getSettings() {
   const stored = await chrome.storage.local.get(Object.keys(DEFAULTS));
+  // Earlier versions saved the single default name; move those users to the new list.
+  if (stored.bodyField === 'Enter_Body') delete stored.bodyField;
   return { ...DEFAULTS, ...stored };
 }
 

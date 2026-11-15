@@ -90,14 +90,20 @@ async function readPage() {
   page.headlineFound = frames.some((r) => r.headlineFound);
 
   if (!page.found) {
-    setSource(`No "${settings.bodyField}" field on this page. Open the article editor, or change the field name in Settings.`, true);
+    setSource(`No article body field (${fieldList()}) on this page. Open the article editor, or add the field name in Settings.`, true);
   } else if (!page.text) {
-    setSource(`Found "${settings.bodyField}", but it's empty. Write or paste the article first.`, true);
+    setSource(`Found ${page.source.replace(/ \(.*\)$/, '')}, but it's empty. Write or paste the article first.`, true);
   } else {
     const words = page.text.split(/\s+/).filter(Boolean).length;
     const t = page.tables?.length ?? 0;
     setSource(`Read ${words.toLocaleString()} words${t ? ` and ${t} table${t > 1 ? 's' : ''}` : ''} from ${page.source}.`);
   }
+}
+
+/** "Enter_Body, Body or Description" */
+function fieldList() {
+  const names = settings.bodyField.split(',').map((s) => s.trim()).filter(Boolean);
+  return names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}` : names[0] ?? '';
 }
 
 function setSource(text, blocked = false) {

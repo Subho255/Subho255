@@ -1,20 +1,28 @@
 // These functions are injected into the CMS page with chrome.scripting.executeScript.
 // They must be self-contained: no imports and no outside variables.
 
-// Reads the article body. Tries, in order:
-//   1. an element whose ID or name is the field name (also "ctl00_Main_Enter_Body" style IDs),
+// Reads the article body. `bodyField` is a comma-separated list of field names, because
+// different forms name the body differently (Enter_Body, Body in the News form, Description
+// in the Exam form). For each name it tries:
+//   1. an element whose ID or name is that name (also "ctl00_Main_Enter_Body" style IDs),
 //      including TinyMCE / CKEditor wrappers named after it;
-//   2. a visible label with that text (page-builder CMSs show "Enter_Body" above each body
-//      block) and the editor in the same block; all such blocks are read, in page order;
-//   3. failing both, the editor on the page with the most text.
+//   2. a visible label with that exact text (page-builder CMSs show "Enter_Body" above each
+//      body block) and the editor in the same block; all such blocks are read, in page order.
+// The first name whose field holds real article text wins. Failing all names, it reads the
+// editor on the page with the most text.
 export function readField(bodyField, headlineField) {
   const esc = (s) => CSS.escape(s);
+  const names = String(bodyField ?? '').split(/[,\n]/).map((s) => s.trim()).filter(Boolean);
+  if (!names.length) names.push('Enter_Body');
 
+  // Exact ID/name, or one that ends with it after a separator ("ctl00_Main_Body"), so a
+  // generic name like "Description" does not match "MetaDescription".
   function find(name) {
     if (!name) return null;
+    const n = esc(name);
     return document.getElementById(name)
       || document.getElementsByName(name)[0]
-      || document.querySelector(`[id$="${esc(name)}"], [name$="${esc(name)}"]`);
+      || document.querySelector(`[id$="_${n}"], [id$="-${n}"], [name$="$${n}"], [name$="_${n}"], [name$="-${n}"]`);
   }
 
   function htmlToText(html) {
@@ -69,9 +77,12 @@ export function readField(bodyField, headlineField) {
 
   function byId(name) {
     // The textarea under a rich editor is only updated on save, so check the editors first.
-    const wrapped = document.querySelector(
-      `#${esc(name)}_ifr, [id$="${esc(name)}_ifr"], #cke_${esc(name)} iframe, [id$="cke_${esc(name)}"] iframe, #cke_${esc(name)} .cke_editable, [id$="cke_${esc(name)}"] .cke_editable`,
-    );
+    const n = esc(name);
+    const wrapped = document.querySelector([
+      `#${n}_ifr`, `[id$="_${n}_ifr"]`,
+      `#cke_${n} iframe`, `[id^="cke_"][id$="_${n}"] iframe`,
+      `#cke_${n} .cke_editable`, `[id^="cke_"][id$="_${n}"] .cke_editable`,
+    ].join(', '));
     if (wrapped && editorText(wrapped)?.trim()) return [wrapped];
     const el = find(name);
     if (!el) return null;
@@ -184,7 +195,7 @@ export function readField(bodyField, headlineField) {
     return out;
   }
 
-  function readBody(name) {
+  function readNamed(name) {
     const ids = byId(name);
     if (ids) {
       const [el, plain] = ids;
@@ -197,14 +208,25 @@ export function readField(bodyField, headlineField) {
       const n = labelled.length;
       return { text, tables: tablesIn(labelled), source: `${n > 1 ? `${n} ${name} blocks` : name} (${kind(labelled[0])})` };
     }
+    return null;
+  }
+
+  function readBody() {
+    const found = names.map(readNamed).filter(Boolean);
+    const len = (r) => clean(r.text).length;
+    // Prefer a field with a real article (the API needs 200+ characters), then any text,
+    // then any match at all, so an empty or short field (like a meta description) loses.
+    const pick = found.find((r) => len(r) >= 200) ?? found.find((r) => len(r) > 0) ?? found[0];
+    if (pick) return pick;
     const largest = largestEditor();
     if (largest) {
-      return { text: editorText(largest[0]), tables: tablesIn(largest), source: `the largest editor on the page ("${name}" not found)`, guessed: true };
+      const list = names.map((x) => `"${x}"`).join(', ');
+      return { text: editorText(largest[0]), tables: tablesIn(largest), source: `the largest editor on the page (${list} not found)`, guessed: true };
     }
     return null;
   }
 
-  const body = readBody(bodyField);
+  const body = readBody();
   const headlineEl = find(headlineField);
   const headline = headlineEl ? (headlineEl.value ?? headlineEl.innerText ?? '') : '';
 

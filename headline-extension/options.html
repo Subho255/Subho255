@@ -64,9 +64,9 @@
     <section class="group">
       <h2>Page fields</h2>
       <div class="field">
-        <label for="bodyField">Article body field</label>
+        <label for="bodyField">Article body field names</label>
         <input id="bodyField" type="text" spellcheck="false">
-        <p class="hint">The ID, name or visible label of the CMS field that holds the article. The default is <code>Enter_Body</code>. If nothing matches, the extension reads the largest editor on the page.</p>
+        <p class="hint">The ID, name or visible label of the field that holds the article, separated by commas. Different forms use different names: the default <code>Enter_Body, Body, Description</code> covers the standard, News and Exam forms. The first field with article text is used. If none matches, the extension reads the largest editor on the page.</p>
       </div>
       <div class="field">
         <label for="headlineField">Headline field <span class="muted">(optional)</span></label>

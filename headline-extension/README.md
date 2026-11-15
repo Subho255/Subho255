@@ -1,6 +1,6 @@
 # Headline Optimiser (Chrome extension)
 
-Reads the article from the CMS **`Enter_Body`** field and suggests five or six SEO-backed headlines: one each for Search, Data-driven and Explainer, and two or three for Discover, each with a different angle.
+Reads the article from the CMS body field (**`Enter_Body`**, **`Body`** in the News form or **`Description`** in the Exam form) and suggests five or six SEO-backed headlines: one each for Search, Data-driven and Explainer, and two or three for Discover, each with a different angle.
 
 | Strategy | Built for | Rules it follows |
 | --- | --- | --- |
@@ -87,16 +87,18 @@ You can close the popup while it works. The request runs in the background, and 
 | --- | --- | --- |
 | Company server URL | `DEFAULT_SERVER_URL` in `lib/settings.js` | Where sign-in and headline requests go. |
 | Own API key, model | empty, Opus 5.5 | Under **Advanced**. Used only when the server URL is empty: the extension then calls the Anthropic API directly with this key. |
-| Article body field | `Enter_Body` | Matched by ID or name, or by a visible label with this text. See below. |
+| Article body field names | `Enter_Body, Body, Description` | Comma-separated. Each is matched by ID or name, or by a visible label with exactly that text. The first field with article text is used. See below. |
 | Headline field | empty | Set it to the CMS headline field's ID or name. The extension then critiques the current headline, and each suggestion gets a **Use** button that fills the field. |
 
 ## How it finds the article
 
-It looks for the body field in this order:
+It tries each name in the list (by default `Enter_Body`, then `Body`, then `Description`). For each name it looks:
 
 1. **By ID or name:** an element whose ID or name is `Enter_Body`, or ends with it, such as `ctl00_Main_Enter_Body`. TinyMCE (`Enter_Body_ifr`) and CKEditor (`cke_Enter_Body`) wrappers count.
 2. **By label:** page-builder CMSs often show an "Enter_Body" label above each body block. The extension finds every such label and reads the editor in the same block, joining the blocks in page order. A hidden textarea, which only updates on save, is ignored. So are other editors, such as a summary box.
-3. **Fallback:** if neither matches, it reads the editor with the most text. The popup then says *"the largest editor on the page ("Enter_Body" not found)"*, so you know it guessed.
+It uses the first field that holds real article text (200+ characters). So an empty Enter_Body, or a short field such as a meta description, doesn't win over the real body. Names match on a word boundary only: `Description` matches `Description` or `ctl00_Main_Description`, but not `MetaDescription` or `SeoDescription`.
+
+3. **Fallback:** if no name matches, it reads the editor with the most text. The popup then says *"the largest editor on the page ("Enter_Body" not found)"*, so you know it guessed.
 
 Supported editors: CKEditor 4 (iframe or inline), CKEditor 5, TinyMCE, any `contenteditable` element, and plain textareas or inputs. HTML in a textarea is converted to text.
 
