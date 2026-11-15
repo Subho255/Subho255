@@ -120,7 +120,7 @@ test('headline service sends the shared prompt with fallbacks and parses the rep
   assert.deepEqual(sent.betas, ['server-side-fallback-2026-07-01']);
   assert.equal(sent.fallbacks, 'default');
   assert.equal(sent.output_config.format.type, 'json_schema');
-  assert.match(sent.messages[0].content, /Focus keyword from the editor: RBI/);
+  assert.match(sent.messages[0].content, /<focus_keyword>RBI<\/focus_keyword>/);
   assert.equal(result.headlines[0].headline, 'RBI repo rate unchanged at 5.5%');
 });
 

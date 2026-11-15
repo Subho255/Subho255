@@ -1,3 +1,4 @@
+import { detectInstructions } from './lib/guard.js';
 import { readField, writeHeadline } from './lib/page.js';
 import { getSettings, isReady, mode } from './lib/settings.js';
 
@@ -94,10 +95,45 @@ async function readPage() {
   } else if (!page.text) {
     setSource(`Found ${page.source.replace(/ \(.*\)$/, '')}, but it's empty. Write or paste the article first.`, true);
   } else {
+    showWarnings();
     const words = page.text.split(/\s+/).filter(Boolean).length;
     const t = page.tables?.length ?? 0;
     setSource(`Read ${words.toLocaleString()} words${t ? ` and ${t} table${t > 1 ? 's' : ''}` : ''} from ${page.source}.`);
   }
+}
+
+/** A warning box: a title and a list of quoted snippets, all set as plain text. */
+function fillWarning(el, title, items, footer = '') {
+  el.replaceChildren();
+  const strong = document.createElement('strong');
+  strong.textContent = title;
+  el.append(strong);
+  if (items.length) {
+    const ul = document.createElement('ul');
+    for (const t of items) {
+      const li = document.createElement('li');
+      li.textContent = t;
+      ul.append(li);
+    }
+    el.append(ul);
+  }
+  if (footer) el.append(document.createTextNode(footer));
+  el.hidden = false;
+}
+
+/** Warns about hidden text and text that addresses an AI, before anything is sent. */
+function showWarnings() {
+  const flags = detectInstructions({ article: page.text, keyword: $('keyword').value, headline: page.headline, tables: page.tables });
+  const items = [
+    ...(page.hiddenText ?? []).map((t) => `Hidden text (left out): “${t}”`),
+    ...flags.map((f) => `In the ${f.field}: “${f.snippet}”`),
+  ];
+  if (!items.length) {
+    $('warn').hidden = true;
+    return;
+  }
+  fillWarning($('warn'), 'Check this text before publishing', items,
+    'It looks like instructions to an AI, or text readers can’t see. Often it comes from copied press releases or websites. The extension ignores it, but check where it came from.');
 }
 
 /** "Enter_Body, Body or Description" */
@@ -115,6 +151,7 @@ async function onGenerate(event) {
   event.preventDefault();
   await readPage(); // pick up edits made since the popup opened
   if (!page.text) return;
+  showWarnings();
   render({ status: 'loading' });
   const entry = await chrome.runtime.sendMessage({
     type: 'generate',
@@ -151,6 +188,12 @@ function render(entry) {
 
 function showResult(r) {
   $('results').hidden = false;
+
+  if (r.injection_warning) {
+    fillWarning($('model-warn'), 'Instructions in the article were ignored', [r.injection_warning]);
+  } else {
+    $('model-warn').hidden = true;
+  }
 
   $('feedback').hidden = !r.current_headline_feedback;
   $('feedback').textContent = r.current_headline_feedback ? `Current headline: ${r.current_headline_feedback}` : '';
@@ -207,8 +250,14 @@ function showInsights(r) {
   const items = r.data_insights ?? [];
   // Hide the section for articles without tables, unless the model found something anyway.
   $('insights').hidden = !items.length && !(page.tables?.length);
-  $('insight-note').hidden = Boolean(items.length) || !r.data_insights_note;
-  $('insight-note').textContent = r.data_insights_note ?? '';
+  const removed = r.dropped_insights?.length ?? 0;
+  const removedNote = removed
+    ? `${removed} insight${removed > 1 ? 's were' : ' was'} removed because ${removed > 1 ? 'they quoted numbers' : 'it quoted a number'} not found in the table (${r.dropped_insights.flatMap((d) => d.numbers).join(', ')}).`
+    : '';
+  if (removed) $('insights').hidden = false;
+  const note = [items.length ? '' : r.data_insights_note, removedNote].filter(Boolean).join(' ');
+  $('insight-note').hidden = !note;
+  $('insight-note').textContent = note;
   const list = $('insight-list');
   list.replaceChildren();
   for (const d of items) {

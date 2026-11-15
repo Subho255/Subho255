@@ -119,6 +119,7 @@ lib/claude.js     prompt, JSON schema, request and response handling (shared wit
 lib/server.js     Google sign-in through the company server, and server requests
 lib/page.js       functions injected into the CMS page to read the body and tables, and fill the headline
 lib/stats.js      exact statistics for tables (shared with the server)
+lib/guard.js      prompt-injection checks, escaping and number verification (shared with the server)
 lib/settings.js   settings storage
 assets/           peeking kitten, hugging kitten, side-edge artwork, icon source (SVG)
 fonts/            Fredoka (OFL) for headings and buttons
@@ -127,6 +128,14 @@ icons/            toolbar icons
 
 ## Security note
 
-With the company server, no API key is stored in any browser. The extension holds only a signed sign-in pass that expires after 30 days, works only for company accounts, and stops working as soon as someone is removed from the allowlist.
+**Prompt injection.** Anything in the article, tables, focus keyword or current headline reaches the model. So the extension treats all of it as untrusted content, not instructions:
 
-The **Advanced** own-key option stores a key in the browser, where anyone with access to that Chrome profile can read it. Use it only for personal testing.
+1. **Data, not instructions.** The system prompt says these inputs are material to analyse and never instructions, whoever they claim to be from. If the model meets an attempt anyway, it ignores it and reports it in `injection_warning`, which the popup shows.
+2. **No breaking out.** `<` and `>` in all user content are escaped, so pasted text such as `</article>` cannot close or fake the tags the prompt uses.
+3. **Length caps.** The focus keyword and current headline are cut to 150 characters on one line.
+4. **Warnings before sending** (`lib/guard.js`, `lib/page.js`). Text readers can't see is reported and left out of what is sent: white on white, tiny, transparent, off-screen or `display:none`. Text that addresses an AI ("ignore previous instructions", "you are an AI", in English or Hindi) is flagged. Both show in an amber box so the author can check where the copy came from.
+5. **Numbers are checked.** Every number in a data insight is compared against the table and the statistics computed in code. Insights that quote anything else are dropped, and the popup says so.
+
+The model has no tools: it can't browse, publish or edit the CMS, and the API key is never part of the prompt. Results are shown as plain text, never as HTML.
+
+**API keys.** With the company server, no API key is stored in any browser. The extension holds only a signed sign-in pass that expires after 30 days, works only for company accounts, and stops working as soon as someone is removed from the allowlist. The **Advanced** own-key option stores a key in the browser, where anyone with access to that Chrome profile can read it. Use it only for personal testing.

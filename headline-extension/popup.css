@@ -255,6 +255,17 @@ input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1p
 .context { margin: 0; color: var(--muted); }
 .insight .caveat { margin: 5px 0 0; color: var(--warn); font-size: 12px; }
 #insight-note { margin: 0 0 8px; }
+
+/* Warnings: hidden text, instruction-like text, removed insights */
+.warn {
+  background: var(--tag-explainer); color: var(--tag-explainer-text);
+  border: 1.5px solid currentColor; border-radius: 12px;
+  padding: 8px 11px; margin: 0 0 12px; font-size: 12px;
+}
+.warn strong { display: block; font: 600 13px var(--display); margin-bottom: 3px; }
+.warn ul { margin: 4px 0 0; padding-left: 18px; }
+.warn li { margin: 2px 0; word-break: break-word; }
+#results > .warn { border-width: 2px; }
 .insight .use-as { white-space: normal; }
 .insight .card-foot { border-top: 0; padding-top: 2px; }
 .kv { margin-bottom: 9px; }

@@ -6,7 +6,7 @@ import { HeadlineError, buildRequest, parseResponse } from '../headline-extensio
 // schema and response parsing are shared with the extension (headline-extension/lib).
 
 export const DEFAULT_MODEL = 'claude-opus-5-5';
-const MAX_FIELD = 300;
+const MAX_FIELD = 150; // buildRequest caps these too (guard.js)
 
 export { HeadlineError };
 
@@ -31,10 +31,10 @@ export function headlineService({ client, model = DEFAULT_MODEL }) {
 
     // Tables are trimmed to size and analysed inside buildRequest (headline-extension/lib/stats.js).
     const tables = Array.isArray(input?.tables) ? input.tables : [];
-    const { headers, body } = buildRequest({ model, article, focusKeyword, currentHeadline, tables });
+    const { headers, body, numbers } = buildRequest({ model, article, focusKeyword, currentHeadline, tables });
     const betas = headers['anthropic-beta'] ? [headers['anthropic-beta']] : undefined;
     const message = await client.beta.messages.create({ ...body, ...(betas ? { betas } : {}) });
-    return parseResponse(message);
+    return parseResponse(message, { numbers });
   };
 }
 

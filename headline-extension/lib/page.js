@@ -195,18 +195,85 @@ export function readField(bodyField, headlineField) {
     return out;
   }
 
+  // --- hidden text ------------------------------------------------------------------
+  // Text readers can't see (tiny, transparent, white on white, pushed off-screen) is a
+  // common way to smuggle instructions to an AI inside pasted copy. It is reported to the
+  // author and left out of what is sent.
+
+  function rgba(value) {
+    const m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(value || '');
+    return m ? { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : +m[4] } : null;
+  }
+
+  function luminance({ r, g, b }) {
+    const lin = (c) => { const v = c / 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  }
+
+  function backgroundOf(node, win) {
+    for (let el = node; el && el.nodeType === 1; el = el.parentElement) {
+      const bg = rgba(win.getComputedStyle(el).backgroundColor);
+      if (bg && bg.a > 0.5) return bg;
+    }
+    return { r: 255, g: 255, b: 255, a: 1 }; // editors are white unless styled otherwise
+  }
+
+  function isHidden(node, win) {
+    if (!win) {
+      // Parsed textarea HTML has no layout; judge by inline styles.
+      const st = (node.getAttribute('style') || '').toLowerCase().replace(/\s+/g, '');
+      return node.hidden || /display:none|visibility:hidden|font-size:0|opacity:0(\.0\d*)?(;|$)|color:(#fff\b|#ffffff|white|rgb\(255,255,255\))/.test(st);
+    }
+    if (node.checkVisibility && !node.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return true;
+    const cs = win.getComputedStyle(node);
+    if (parseFloat(cs.fontSize) < 5 || parseFloat(cs.textIndent) < -500) return true;
+    let opacity = 1;
+    for (let el = node; el && el.nodeType === 1; el = el.parentElement) opacity *= parseFloat(win.getComputedStyle(el).opacity);
+    if (opacity < 0.15) return true;
+    const box = node.getBoundingClientRect();
+    if (box.width * box.height < 2 || box.right < 0 || box.bottom < 0) return true;
+    const fg = rgba(cs.color);
+    if (fg && fg.a < 0.15) return true;
+    return Boolean(fg && Math.abs(luminance(fg) - luminance(backgroundOf(node, win))) < 0.04);
+  }
+
+  function hiddenIn(els) {
+    const out = [];
+    for (const el of els) {
+      const root = contentRoot(el);
+      if (!root) continue;
+      const win = root.ownerDocument.defaultView;
+      const nodes = root.querySelectorAll('*');
+      for (let i = 0; i < nodes.length && i < 4000 && out.length < 8; i++) {
+        const node = nodes[i];
+        const own = [...node.childNodes].filter((c) => c.nodeType === 3).map((c) => c.nodeValue).join(' ').replace(/\s+/g, ' ').trim();
+        if (own.length >= 12 && isHidden(node, win) && !out.includes(own)) out.push(own.slice(0, 400));
+      }
+    }
+    return out;
+  }
+
+  function stripHidden(text, hidden) {
+    let out = text || '';
+    for (const h of hidden) {
+      const words = h.split(' ').map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      out = out.replace(new RegExp(words.join('\\s+'), 'g'), ' ');
+    }
+    return out;
+  }
+
   function readNamed(name) {
     const ids = byId(name);
     if (ids) {
       const [el, plain] = ids;
       const text = plain ? el.innerText : editorText(el);
-      return { text, tables: tablesIn([el]), source: `${name} (${plain ? 'page element' : kind(el)})` };
+      return { text, els: [el], tables: tablesIn([el]), source: `${name} (${plain ? 'page element' : kind(el)})` };
     }
     const labelled = byLabel(name);
     if (labelled) {
       const text = labelled.map(editorText).filter((t) => t && t.trim()).join('\n\n');
       const n = labelled.length;
-      return { text, tables: tablesIn(labelled), source: `${n > 1 ? `${n} ${name} blocks` : name} (${kind(labelled[0])})` };
+      return { text, els: labelled, tables: tablesIn(labelled), source: `${n > 1 ? `${n} ${name} blocks` : name} (${kind(labelled[0])})` };
     }
     return null;
   }
@@ -221,19 +288,21 @@ export function readField(bodyField, headlineField) {
     const largest = largestEditor();
     if (largest) {
       const list = names.map((x) => `"${x}"`).join(', ');
-      return { text: editorText(largest[0]), tables: tablesIn(largest), source: `the largest editor on the page (${list} not found)`, guessed: true };
+      return { text: editorText(largest[0]), els: largest, tables: tablesIn(largest), source: `the largest editor on the page (${list} not found)`, guessed: true };
     }
     return null;
   }
 
   const body = readBody();
+  const hidden = body ? hiddenIn(body.els) : [];
   const headlineEl = find(headlineField);
   const headline = headlineEl ? (headlineEl.value ?? headlineEl.innerText ?? '') : '';
 
   return {
     found: Boolean(body),
     guessed: Boolean(body?.guessed),
-    text: clean(body?.text),
+    text: clean(stripHidden(body?.text, hidden)),
+    hiddenText: hidden.map((h) => (h.length > 160 ? `${h.slice(0, 160)}…` : h)),
     tables: body?.tables ?? [],
     source: body?.source ?? '',
     headline: headline.trim(),
