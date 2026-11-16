@@ -74,38 +74,13 @@ The night artwork is original. It uses no DC characters, logos or the Bat-Signal
 
 All artwork is original, with no brand logos or characters, in `assets/`.
 
-## Install (colleagues)
+## Install
 
 1. Open `chrome://extensions` and turn on **Developer mode** (top right).
 2. Click **Load unpacked** and select this `headline-extension` folder.
-3. Pin the extension and click its icon. Click **Sign in with Google** and choose your **@jagrannewmedia.com** account.
+3. Pin the extension. Right-click its icon, choose **Options**, paste your Anthropic API key and click **Check key**. It should say "Key works". Then click **Save**.
 
-That's it: no API key. You stay signed in for 30 days, then click **Sign in with Google** again. Personal Gmail and other accounts are refused.
-
-If the popup asks for a server URL instead, your admin hasn't set the default yet. Open **Options**, paste the company server URL they give you, and click **Sign in with Google**.
-
-## Set up the company server (admin, once)
-
-The server holds the Anthropic key and checks every request comes from a signed-in company account. It's the `server.js` app at the root of this repo.
-
-1. **Google sign-in.** In [Google Cloud Console → APIs & Services](https://console.cloud.google.com/apis/credentials):
-   - Set up the **OAuth consent screen** with user type **Internal**. Google then only lets accounts from your company's Google Workspace sign in at all.
-   - Create an **OAuth client ID** of type **Web application**. Add the redirect URI `https://<your-server>/auth/google/callback`.
-2. **Deploy.** On [Render](https://dashboard.render.com), choose New → Blueprint and pick this repo; `render.yaml` sets it up. Fill in `ANTHROPIC_API_KEY`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. `ALLOWED_DOMAINS=jagrannewmedia.com` and `REQUIRE_WORKSPACE=1` are already set. Docker works too; see the root README.
-3. **Point the extension at it.** Put the server URL in `DEFAULT_SERVER_URL` in `lib/settings.js`, then zip the folder and share it. Colleagues then only click **Sign in with Google**.
-
-Who gets in, and how to remove access:
-
-| Setting | Effect |
-| --- | --- |
-| `ALLOWED_DOMAINS=jagrannewmedia.com` | Any company account, such as subhomoy.ganguly@jagrannewmedia.com or atul.tyagi@jagrannewmedia.com |
-| `ALLOWED_EMAILS=a@jagrannewmedia.com,b@jagrannewmedia.com` | Use this instead of the domain to allow only named people |
-| `REQUIRE_WORKSPACE=1` | The account must be managed by the company's Google Workspace, not just use a company address |
-| `HEADLINES_PER_HOUR=60` | Requests per person per hour |
-
-Allowlist changes apply to the next request, including for people already signed in. To sign everyone out at once, change `SESSION_SECRET`.
-
-On Render's free plan the server sleeps when idle, so the first request after a quiet spell can take up to a minute.
+Get a key at console.anthropic.com → API keys (it starts with `sk-ant-`). You enter it once per Chrome profile; it survives restarts and updates.
 
 ## Use
 
@@ -120,8 +95,8 @@ You can close the popup while it works. The request runs in the background, and 
 
 | Setting | Default | Notes |
 | --- | --- | --- |
-| Company server URL | `DEFAULT_SERVER_URL` in `lib/settings.js` | Where sign-in and headline requests go. |
-| Own API key, model | empty, Opus 5.5 | Under **Advanced**. Used only when the server URL is empty: the extension then calls the Anthropic API directly with this key. |
+| API key | empty | Your Anthropic API key. **Check key** tests it without generating anything; saving a new key checks it automatically. |
+| Model | Claude Opus 5.5 | Sonnet 5.5 and Haiku 5.5 are faster and cheaper. |
 | Article body field names | `Enter_Body, Body, Description` | Comma-separated. Each is matched by ID or name, or by a visible label with exactly that text. The first field with article text is used. See below. |
 | Headline field | empty | Set it to the CMS headline field's ID or name. The extension then critiques the current headline, and each suggestion gets a **Use** button that fills the field. |
 
@@ -146,18 +121,19 @@ One run on Opus 5.5 uses roughly 2–4k tokens, which is about US$0.04–0.08. A
 ## Files
 
 ```
-manifest.json     MV3 manifest (activeTab, scripting, storage, identity; host access only to api.anthropic.com)
-background.js     runs Google sign-in and the API calls, and keeps results per tab
+manifest.json     MV3 manifest (activeTab, scripting, storage; host access only to api.anthropic.com)
+background.js     runs the API call and keeps results per tab
 popup.html/.js/.css  the panel
 options.html/.js  settings
-lib/claude.js     prompt, JSON schema, request and response handling (shared with the server)
-lib/server.js     Google sign-in through the company server, and server requests
+lib/claude.js     prompt, JSON schema, request and response handling, API key check
 lib/page.js       functions injected into the CMS page to read the body and tables, and fill the headline
-lib/stats.js      exact statistics for tables (shared with the server)
+lib/stats.js      exact statistics for tables
 lib/explore.js    comparison, cross-tab, weighted averages, correlation and regression
 lib/distribution.js  descriptive stats, skewness, kurtosis, Shapiro–Wilk, frequency, modality, outliers
-lib/guard.js      prompt-injection checks, escaping and number verification (shared with the server)
+lib/guard.js      prompt-injection checks, escaping and number verification
 lib/settings.js   settings storage
+lib/theme.js, theme-init.js  day/night theme
+lib/quips.js      loading-bar lines
 assets/           peeking kitten, hugging kitten, side-edge artwork, icon source (SVG)
 fonts/            Fredoka (OFL) for headings and buttons
 icons/            toolbar icons
@@ -175,4 +151,4 @@ icons/            toolbar icons
 
 The model has no tools: it can't browse, publish or edit the CMS, and the API key is never part of the prompt. Results are shown as plain text, never as HTML.
 
-**API keys.** With the company server, no API key is stored in any browser. The extension holds only a signed sign-in pass that expires after 30 days, works only for company accounts, and stops working as soon as someone is removed from the allowlist. The **Advanced** own-key option stores a key in the browser, where anyone with access to that Chrome profile can read it. Use it only for personal testing.
+**API key.** The key is stored in `chrome.storage.local`, so it stays in this Chrome profile and is never synced. It is sent only to `api.anthropic.com`. Anyone with access to the Chrome profile can read it from the extension's storage, so don't share a profile, and replace the key in the Anthropic Console if it may have leaked.

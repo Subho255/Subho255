@@ -1,5 +1,5 @@
-// Defences against prompt injection and made-up numbers. Pure functions: used by the
-// extension and the server alike.
+// Defences against prompt injection and made-up numbers. Pure functions with no browser
+// APIs, so they are unit-tested in Node.
 
 export const MAX_SHORT_FIELD = 150; // focus keyword and current headline
 

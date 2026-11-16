@@ -255,15 +255,53 @@ export function parseResponse(data, { numbers } = {}) {
   return result;
 }
 
+/** A plain-language message for an error response from the Anthropic API. */
+export function apiErrorMessage(status, data) {
+  const msg = data?.error?.message ?? '';
+  if (status === 401) return 'Anthropic rejected this API key. Open Settings, paste the full key from console.anthropic.com → API keys (it starts with sk-ant-), and click Check key.';
+  if (status === 403) return `This API key isn't allowed to use this model. Try another model in Settings. (${msg || 'permission denied'})`;
+  if (status === 404) return `This model isn't available for your API key. Pick another model in Settings. (${msg || 'not found'})`;
+  if (status === 429) return 'Rate limit or credit limit reached on your Anthropic account. Wait a minute, or check billing at console.anthropic.com.';
+  if (status === 400 && /credit|balance|billing/i.test(msg)) return 'Your Anthropic account is out of credit. Add credit at console.anthropic.com → Billing.';
+  if (status === 529 || status >= 500) return 'The Anthropic API is overloaded right now. Try again shortly.';
+  return `API error ${status}${msg ? `: ${msg}` : ''}`;
+}
+
+function keyHeaders(apiKey) {
+  return {
+    'x-api-key': apiKey.trim(),
+    'anthropic-version': API_VERSION,
+    'anthropic-dangerous-direct-browser-access': 'true',
+  };
+}
+
+/**
+ * Checks an API key without generating anything (lists models, which is free).
+ * Returns { ok: true } or { ok: false, message }.
+ */
+export async function checkApiKey(apiKey) {
+  if (!apiKey?.trim()) return { ok: false, message: 'Paste your API key first.' };
+  if (!apiKey.trim().startsWith('sk-ant-')) return { ok: false, message: 'That doesn’t look like an Anthropic API key. Keys start with sk-ant-.' };
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/models?limit=1', { headers: keyHeaders(apiKey) });
+  } catch {
+    return { ok: false, message: 'Could not reach the Anthropic API. Check your connection.' };
+  }
+  if (res.ok) return { ok: true };
+  if (res.status === 401) return { ok: false, message: 'Anthropic rejected this key. Copy the full key again from console.anthropic.com → API keys; it may have been deleted or mistyped.' };
+  return { ok: false, message: apiErrorMessage(res.status, await res.json().catch(() => ({}))) };
+}
+
 export async function suggestHeadlines({ apiKey, ...input }) {
-  if (!apiKey) throw new HeadlineError('Add your Anthropic API key in Settings first.');
+  if (!apiKey?.trim()) throw new HeadlineError('Add your Anthropic API key in Settings first.');
   const { headers, body, numbers } = buildRequest(input);
 
   let res;
   try {
     res = await fetch(API_URL, {
       method: 'POST',
-      headers: { ...headers, 'x-api-key': apiKey },
+      headers: { ...headers, ...keyHeaders(apiKey) },
       body: JSON.stringify(body),
     });
   } catch {
@@ -271,12 +309,6 @@ export async function suggestHeadlines({ apiKey, ...input }) {
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    const msg = data?.error?.message ?? res.statusText;
-    if (res.status === 401) throw new HeadlineError('The API key was rejected. Check it in Settings.');
-    if (res.status === 429) throw new HeadlineError('Rate limited by the API. Wait a moment and try again.');
-    if (res.status === 529 || res.status >= 500) throw new HeadlineError('The API is overloaded right now. Try again shortly.');
-    throw new HeadlineError(`API error ${res.status}: ${msg}`);
-  }
+  if (!res.ok) throw new HeadlineError(apiErrorMessage(res.status, data));
   return parseResponse(data, { numbers });
 }

@@ -4,7 +4,6 @@ const MESSAGES = {
   state: 'Sign-in expired or was interrupted. Please try again.',
   cancelled: 'Sign-in was cancelled.',
   google: 'Google sign-in failed. Please try again.',
-  not_workspace: 'Use your company Google Workspace account to sign in.',
 };
 const code = new URLSearchParams(location.search).get('error');
 if (code) {

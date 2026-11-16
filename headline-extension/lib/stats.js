@@ -1,6 +1,6 @@
 // Exact statistics for tables in the article. The model is good at judging what a number
 // means, not at arithmetic, so every figure it may quote is computed here first.
-// Pure functions: used by the extension and the server alike.
+// Pure functions with no browser APIs, so they are unit-tested in Node.
 
 import { describe, distribution, unusualYears } from './distribution.js';
 import { compareCategories, compareTimeSeries, correlations, crossTab, curvature, isAdditive, sameMeasure, weightedAverages } from './explore.js';

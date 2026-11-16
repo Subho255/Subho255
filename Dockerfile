@@ -6,8 +6,6 @@ RUN npm ci --omit=dev
 COPY server.js ./
 COPY src ./src
 COPY public ./public
-# The extension's prompt and parsing are shared with the server.
-COPY headline-extension/lib ./headline-extension/lib
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

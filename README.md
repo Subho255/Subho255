@@ -87,15 +87,6 @@ On Cloud Run: `gcloud run deploy headline-desk --source . --allow-unauthenticate
 
 Both variables can be combined. Every analysis spends your TypeSafe credits, so restrict access unless you intend the tool to be public.
 
-## Chrome extension backend
-
-The same server also powers the **Headline Optimiser** Chrome extension (`headline-extension/`). Colleagues sign in with Google from the extension, and the server calls Claude with its own `ANTHROPIC_API_KEY`, so no key is installed in any browser.
-
-- `GET /auth/extension?redirect=…` starts Google sign-in for the extension. It only accepts `https://<id>.chromiumapp.org/` redirects and returns a signed 30-day pass.
-- `GET /api/ext/me` and `POST /api/ext/headlines` take that pass as `Authorization: Bearer …`, re-check the allowlist on every request, and allow the extension's origin via CORS.
-
-Settings: `ANTHROPIC_API_KEY` (required for the extension), `ANTHROPIC_MODEL` (default `claude-opus-5-5`), `HEADLINES_PER_HOUR` (default 60), `REQUIRE_WORKSPACE=1` (account must be managed by the allowed Google Workspace domain) and `EXTENSION_IDS` (optional lock to specific extension IDs). `TYPESAFE_API_KEY` is now optional, so the server can run for the extension alone. Setup steps are in `headline-extension/README.md`.
-
 ## Layout
 
 ```
@@ -104,8 +95,7 @@ src/text.js         sentence split, name candidates, headline stats (code-owned)
 src/questions.js    Jev question definitions (intents, checks)
 src/analyze.js      two-stage pipeline
 src/policy.js       checks, gates, weights, recommendation
-src/auth.js         Google OAuth, signed session cookie, extension sign-in, allowlist, rate limit
-src/headlines.js    Claude calls for the Chrome extension (prompt shared with headline-extension/lib)
+src/auth.js         Google OAuth, signed session cookie, allowlist, rate limit
 src/mock.js         offline stand-in client
 public/             UI + login page (vanilla HTML/CSS/JS)
 render.yaml         Render blueprint
