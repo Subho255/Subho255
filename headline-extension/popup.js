@@ -1,6 +1,7 @@
 import { detectInstructions } from './lib/guard.js';
 import { readField, writeHeadline } from './lib/page.js';
 import { getSettings, isReady, mode } from './lib/settings.js';
+import { setThemePref, watchSystemTheme } from './lib/theme.js';
 
 const LABELS = { search: 'Search', discover: 'Discover', data: 'Data-driven', explainer: 'Explainer' };
 // Character targets per surface. Only Search is cut off hard in results.
@@ -16,7 +17,24 @@ let page = { found: false, text: '' };
 
 init();
 
+/** Sun/moon button: switches between day and night and remembers the choice. */
+function setupThemeToggle() {
+  const btn = $('theme-toggle');
+  const label = () => {
+    const next = document.documentElement.dataset.theme === 'night' ? 'day' : 'night';
+    btn.title = `Switch to ${next}`;
+    btn.setAttribute('aria-label', `Switch to ${next}`);
+  };
+  label();
+  btn.addEventListener('click', () => {
+    setThemePref(document.documentElement.dataset.theme === 'night' ? 'day' : 'night');
+    label();
+  });
+  watchSystemTheme();
+}
+
 async function init() {
+  setupThemeToggle();
   $('settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
   $('open-settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
   $('sign-in').addEventListener('click', onSignIn);

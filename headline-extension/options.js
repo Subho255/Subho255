@@ -1,10 +1,17 @@
 import { DEFAULTS, MODELS, getSettings, saveSettings } from './lib/settings.js';
 import { normaliseServerUrl } from './lib/server.js';
+import { THEME_PREFS, getThemePref, setThemePref, watchSystemTheme } from './lib/theme.js';
 
 const $ = (id) => document.getElementById(id);
 const fields = ['serverUrl', 'apiKey', 'model', 'bodyField', 'headlineField'];
 
 for (const m of MODELS) $('model').add(new Option(m.label, m.id));
+
+// Theme applies as soon as it changes (no Save needed).
+for (const t of THEME_PREFS) $('theme').add(new Option(t.label, t.id));
+$('theme').value = getThemePref();
+$('theme').addEventListener('change', () => setThemePref($('theme').value));
+watchSystemTheme();
 
 let current = await getSettings();
 for (const f of fields) $(f).value = current[f];

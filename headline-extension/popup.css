@@ -16,6 +16,7 @@
 
 :root {
   --display: "Fredoka", ui-rounded, "SF Pro Rounded", system-ui, sans-serif;
+  --side-art: url("assets/side.svg");
   --bg: #fde4ec;
   --gingham: rgba(244, 160, 190, 0.32);
   --edge-opacity: 1;
@@ -46,38 +47,43 @@
   --tag-explainer-text: #8a5a00;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #2a1622;
-    --gingham: rgba(255, 143, 180, 0.07);
-    --edge-opacity: 0.85;
-    --surface: #3a202f;
-    --surface-2: #462639;
-    --band: #552a43;
-    --line: #d77aa0;
-    --border: #6b3a5a;
-    --field: #8f5878;
-    --shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
-    --text: #ffe8f1;
-    --muted: #d7a9bf;
-    --title: #ffa3c4;
-    --accent: #ff7aa8;
-    --accent-strong: #ff9cc0;
-    --accent-text: #2a1622;
-    --ok: #6fdcaa;
-    --warn: #ffb37a;
-    --error: #ff9b94;
-    --error-bg: #4a1f24;
-    --tag-search: #3b2d63;
-    --tag-search-text: #cdbcff;
-    --tag-discover: #5c2340;
-    --tag-discover-text: #ffadcb;
-    --tag-data: #1d4434;
-    --tag-data-text: #8fe3bb;
-    --tag-explainer: #4d3b12;
-    --tag-explainer-text: #ffd97a;
-  }
+/* Night theme: charcoal and black with a yellow accent, stars, bats and the masked kitten.
+   Chosen by theme-init.js (auto by time of day, system, or fixed). */
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --bg: #0b0d12;
+  --edge-opacity: 1;
+  --surface: #161a22;
+  --surface-2: #1d222c;
+  --band: #222833;
+  --line: #2f3542;
+  --border: #2f3542;
+  --field: #454c5a;
+  --shadow: 0 4px 0 #000;
+  --text: #ecebe6;
+  --muted: #a3a9b4;
+  --title: #f5c518;
+  --accent: #f5c518;
+  --accent-strong: #b89200;
+  --accent-text: #0b0d12;
+  --ok: #6fdcaa;
+  --warn: #ffb347;
+  --error: #ff8a80;
+  --error-bg: #3a1e1e;
+  --tag-search: #232c45;
+  --tag-search-text: #a9bcff;
+  --tag-discover: #3a3010;
+  --tag-discover-text: #f5c518;
+  --tag-data: #173126;
+  --tag-data-text: #7fd8a8;
+  --tag-explainer: #2c2440;
+  --tag-explainer-text: #cdb9ff;
+  --side-art: url("assets/side-night.svg");
 }
+
+/* Day or night artwork: each page carries both, CSS shows the right one. */
+:root:not([data-theme="night"]) .night-art,
+:root[data-theme="night"] .day-art { display: none !important; }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -95,6 +101,14 @@ body {
   background-size: 28px 28px;
   font: 13px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", sans-serif;
 }
+/* Night sky: a moon glow in the corner, stars and faint bats instead of gingham. */
+:root[data-theme="night"] body {
+  background-image:
+    radial-gradient(circle at 88% 4%, rgba(245, 197, 24, 0.22) 0, rgba(245, 197, 24, 0.07) 70px, transparent 170px),
+    url("assets/night-sky.svg");
+  background-size: auto, 220px 220px;
+  background-attachment: fixed, scroll;
+}
 
 /* Kittens and tumblers peeking in from the left and right edges. The strip's centre line
    sits on the window edge, so each drawing is half hidden. The right strip is mirrored and
@@ -106,7 +120,7 @@ body::before, body::after {
   bottom: 0;
   width: 64px;
   z-index: -1;
-  background: url("assets/side.svg") 0 0 / 64px 420px repeat-y;
+  background: var(--side-art) 0 0 / 64px 420px repeat-y;
   opacity: var(--edge-opacity);
   pointer-events: none;
 }
@@ -143,6 +157,17 @@ body::after { right: -32px; transform: scaleX(-1); background-position: 0 210px;
   height: 11px;
   background: radial-gradient(circle at 10px 0, var(--band) 9.5px, transparent 10px) 0 0 / 20px 11px repeat-x;
 }
+/* Night: a bat-wing edge (arcs bitten out of the band, points in between). */
+:root[data-theme="night"] .band { border-radius: 19px 19px 0 0; padding-bottom: 20px; }
+:root[data-theme="night"] .band::after {
+  top: auto; bottom: 0; height: 12px;
+  background: radial-gradient(circle at 14px 12px, var(--surface) 10.5px, transparent 11px) 0 0 / 28px 12px repeat-x;
+}
+:root[data-theme="night"] h1 { text-transform: uppercase; letter-spacing: 0.05em; font-size: 22px; }
+:root[data-theme="night"] .tagline { color: var(--muted); letter-spacing: 0.04em; }
+.bat { width: 26px; height: 14px; flex: none; fill: var(--title); }
+#theme-toggle { position: absolute; top: 8px; left: 8px; }
+#theme-toggle svg { width: 18px; height: 18px; }
 h1 {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   margin: 0;
@@ -256,16 +281,17 @@ input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1p
 .insight .caveat { margin: 5px 0 0; color: var(--warn); font-size: 12px; }
 #insight-note { margin: 0 0 8px; }
 
-/* Warnings: hidden text, instruction-like text, removed insights */
-.warn {
+/* Alert boxes: hidden text, instruction-like text, removed insights.
+   (Not ".warn": that class colours character counts that miss their target.) */
+.alert {
   background: var(--tag-explainer); color: var(--tag-explainer-text);
   border: 1.5px solid currentColor; border-radius: 12px;
   padding: 8px 11px; margin: 0 0 12px; font-size: 12px;
 }
-.warn strong { display: block; font: 600 13px var(--display); margin-bottom: 3px; }
-.warn ul { margin: 4px 0 0; padding-left: 18px; }
-.warn li { margin: 2px 0; word-break: break-word; }
-#results > .warn { border-width: 2px; }
+.alert strong { display: block; font: 600 13px var(--display); margin-bottom: 3px; }
+.alert ul { margin: 4px 0 0; padding-left: 18px; }
+.alert li { margin: 2px 0; word-break: break-word; }
+#results > .alert { border-width: 2px; }
 .insight .use-as { white-space: normal; }
 .insight .card-foot { border-top: 0; padding-top: 2px; }
 .kv { margin-bottom: 9px; }
@@ -288,6 +314,17 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; w
   padding: 9px 20px; font: 600 15px var(--display); box-shadow: var(--shadow);
 }
 .google:not(:disabled):hover { background: #fff5f9; }
+
+/* Night details: bat on the main button and Discover tags, dark Google button. */
+:root[data-theme="night"] #generate::after {
+  width: 24px; height: 12px;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 16'%3E%3Cpath d='M16 3 Q14.5 1 13 2 Q9 -1 2 1 Q5 3 4 7 Q7 5 9 8 Q11 6 13 9 L16 13 L19 9 Q21 6 23 8 Q25 5 28 7 Q27 3 30 1 Q23 -1 19 2 Q17.5 1 16 3 Z'/%3E%3C/svg%3E");
+          mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 16'%3E%3Cpath d='M16 3 Q14.5 1 13 2 Q9 -1 2 1 Q5 3 4 7 Q7 5 9 8 Q11 6 13 9 L16 13 L19 9 Q21 6 23 8 Q25 5 28 7 Q27 3 30 1 Q23 -1 19 2 Q17.5 1 16 3 Z'/%3E%3C/svg%3E");
+}
+:root[data-theme="night"] .tag.discover::before { content: "✦ "; }
+:root[data-theme="night"] .google { background: #1d222c; color: #ecebe6; border-color: #454c5a; }
+:root[data-theme="night"] .google:not(:disabled):hover { background: #262c38; }
+:root[data-theme="night"] .primary { box-shadow: 0 3px 0 var(--accent-strong); }
 
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation: none; }

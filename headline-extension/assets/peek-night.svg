@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 104">
+  <!-- Night mascot: the same original kitten in a black domino mask with a bat-wing bow. -->
+  <g stroke="#0b0d12" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M42 50 L38 10 Q39 4 45 7 L76 26 Z" fill="#f4f2ec"/>
+    <path d="M128 50 L132 10 Q131 4 125 7 L94 26 Z" fill="#f4f2ec"/>
+    <path d="M47 18 L49 38 L64 28 Z" fill="#3a3f4b" stroke="none"/>
+    <path d="M123 18 L121 38 L106 28 Z" fill="#3a3f4b" stroke="none"/>
+    <path d="M26 96 Q22 52 52 34 Q85 18 118 34 Q148 52 144 96 Z" fill="#f4f2ec"/>
+  </g>
+  <!-- Domino mask with white eye slits -->
+  <path d="M34 60 Q58 44 85 55 Q112 44 136 60 Q138 74 118 76 Q100 77 85 67 Q70 77 52 76 Q32 74 34 60 Z" fill="#14171d" stroke="#0b0d12" stroke-width="2"/>
+  <path d="M52 63 Q63 55 74 62 Q63 68 52 63 Z" fill="#fff"/>
+  <path d="M96 62 Q107 55 118 63 Q107 68 96 62 Z" fill="#fff"/>
+  <ellipse cx="50" cy="82" rx="7" ry="4" fill="#ffb3cc" opacity="0.55"/>
+  <ellipse cx="120" cy="82" rx="7" ry="4" fill="#ffb3cc" opacity="0.55"/>
+  <path d="M81 74 Q85 71.4 89 74 Q85 78.6 81 74 Z" fill="#ff7fa8"/>
+  <path d="M79 80.5 Q82 84 85 80.8 Q88 84 91 80.5" fill="none" stroke="#0b0d12" stroke-width="2.4" stroke-linecap="round"/>
+  <g stroke="#9aa1ad" stroke-width="2.6" stroke-linecap="round">
+    <line x1="8" y1="66" x2="30" y2="70"/>
+    <line x1="6" y1="78" x2="29" y2="77"/>
+    <line x1="162" y1="66" x2="140" y2="70"/>
+    <line x1="164" y1="78" x2="141" y2="77"/>
+  </g>
+  <!-- Bat-wing bow -->
+  <g fill="#2b2f38" stroke="#f5c518" stroke-width="1.8" stroke-linejoin="round">
+    <path id="wing" d="M52 27 L32 15 Q31 23 25 21 Q27 29 21 30 Q29 36 34 32 Q37 39 44 34 Q48 37 52 31 Z"/>
+    <use href="#wing" transform="translate(104 0) scale(-1 1)"/>
+    <ellipse cx="52" cy="29" rx="4.5" ry="5.5" fill="#f5c518" stroke="#0b0d12"/>
+  </g>
+  <!-- Paws over the edge -->
+  <g fill="#f4f2ec" stroke="#0b0d12" stroke-width="3.2" stroke-linejoin="round">
+    <path d="M40 104 V94 Q40 82 54 82 Q68 82 68 94 V104 Z"/>
+    <path d="M102 104 V94 Q102 82 116 82 Q130 82 130 94 V104 Z"/>
+  </g>
+  <g stroke="#0b0d12" stroke-width="2.2" stroke-linecap="round">
+    <line x1="50" y1="96" x2="50" y2="101"/><line x1="58" y1="96" x2="58" y2="101"/>
+    <line x1="112" y1="96" x2="112" y2="101"/><line x1="120" y1="96" x2="120" y2="101"/>
+  </g>
+</svg>

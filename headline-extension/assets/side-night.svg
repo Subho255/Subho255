@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 420" width="64" height="420">
+  <!-- Night edge strip: masked kittens, black tumblers and bats, centred on x=32 so each is
+       half hidden at the popup's edge. -->
+  <defs>
+    <g id="face">
+      <path d="M-18 -4 L-19 -22 L-6 -14 Z M18 -4 L19 -22 L6 -14 Z" fill="#f4f2ec" stroke="#0b0d12" stroke-width="2.2" stroke-linejoin="round"/>
+      <ellipse cx="0" cy="2" rx="22" ry="17" fill="#f4f2ec" stroke="#0b0d12" stroke-width="2.2"/>
+      <path d="M-20 0 Q-10 -7 0 -2 Q10 -7 20 0 Q21 7 12 8 Q5 8 0 4 Q-5 8 -12 8 Q-21 7 -20 0 Z" fill="#14171d"/>
+      <path d="M-13 1 Q-8 -3 -3 1 Q-8 4 -13 1 Z M3 1 Q8 -3 13 1 Q8 4 3 1 Z" fill="#fff"/>
+      <ellipse cx="0" cy="10" rx="2" ry="1.5" fill="#ff7fa8"/>
+      <g transform="translate(14 -16) scale(0.45)" fill="#2b2f38" stroke="#f5c518" stroke-width="3" stroke-linejoin="round">
+        <path d="M0 0 L-20 -12 Q-21 -4 -27 -6 Q-25 2 -31 3 Q-23 9 -18 5 Q-15 12 -8 7 Q-4 10 0 4 Z"/>
+        <path d="M0 0 L20 -12 Q21 -4 27 -6 Q25 2 31 3 Q23 9 18 5 Q15 12 8 7 Q4 10 0 4 Z"/>
+      </g>
+    </g>
+    <g id="tumbler">
+      <g transform="translate(-26 -40)" stroke="#0b0d12" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M30 -6 L32 -30" stroke-width="7"/>
+        <path d="M30 -6 L32 -30" stroke="var(--s)" stroke-width="3.4"/>
+        <path d="M46 18 Q64 18 64 36 Q64 54 44 54" fill="none" stroke-width="7.5"/>
+        <path d="M46 18 Q64 18 64 36 Q64 54 44 54" fill="none" stroke="var(--c)" stroke-width="3.4"/>
+        <path d="M6 12 H46 L40 84 Q39 88 35 88 H17 Q13 88 12 84 Z" fill="var(--c)" stroke-width="2.6"/>
+        <rect x="3" y="-4" width="46" height="12" rx="4" fill="#9aa1ad" stroke-width="2.6"/>
+        <rect x="5" y="7" width="42" height="6" fill="#5d6470" stroke-width="2"/>
+        <path d="M16 20 V76" stroke="#fff" stroke-width="3.4" opacity="0.15"/>
+      </g>
+    </g>
+    <path id="bat" d="M0 0 Q-3 -4 -6 -3 Q-10 -7 -16 -6 Q-13 -3 -14 1 Q-10 -1 -8 2 Q-5 0 -3 3 L0 5 L3 3 Q5 0 8 2 Q10 -1 14 1 Q13 -3 16 -6 Q10 -7 6 -3 Q3 -4 0 0 Z"/>
+  </defs>
+  <g transform="translate(32 76) rotate(-14) scale(1.35)"><use href="#face"/></g>
+  <g transform="translate(32 200) rotate(10)" style="--c:#1d2129;--s:#f5c518"><use href="#tumbler"/></g>
+  <g transform="translate(32 336) rotate(-8)" style="--c:#2b2f38;--s:#9aa1ad"><use href="#tumbler"/></g>
+  <g fill="#3a3f4b">
+    <use href="#bat" transform="translate(50 140) scale(0.9)"/>
+    <use href="#bat" transform="translate(46 268) rotate(-12) scale(0.7)"/>
+    <use href="#bat" transform="translate(52 400) rotate(8) scale(0.6)"/>
+  </g>
+</svg>

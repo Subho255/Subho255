@@ -41,18 +41,34 @@ How it stays accurate:
 
 If there's no table, the card stays hidden. If the tables don't support anything meaningful, it says so instead of padding.
 
-## Look
+## Look: day and night
 
-The popup and settings page use a pink kawaii theme:
+The popup and settings page have two themes.
+
+**Day** is a pink kawaii theme:
 
 - a pink gingham background
 - a kitten peeking over the top of the main panel, with its paws on the edge
 - a bold rounded title (Fredoka, bundled under the SIL Open Font License) between outline hearts, and a scalloped title band
-- opaque cards with maroon outlines, so text stays easy to read
-- kittens and tumblers peeking in from the left and right edges
+- opaque cards with maroon outlines
+- kittens and pastel tumblers peeking in from the edges
 - a kitten hugging a tumbler, shown until headlines arrive
 
-There is a plum version for dark mode. All artwork is original, with no brand logos, in `assets/`.
+**Night** is a dark "after hours" theme:
+
+- a night sky with stars, faint bats and a moon glow
+- the same kitten in a black domino mask with a bat-wing bow
+- charcoal panels with a yellow accent, an uppercase title between bats, and a bat-wing edge on the title band
+- masked kittens, black tumblers and bats at the edges
+- the masked kitten in a dark suit with a utility belt, hugging a black tumbler
+
+**Switching:**
+
+- The sun/moon button at the top left of the popup switches instantly and remembers your choice.
+- **Options → Theme** offers: **Auto** (day from 6am to 7pm, night after; the default), **Follow my system**, **Always day** or **Always night**.
+- The theme is applied before the page draws, so it never flashes the wrong one.
+
+All artwork is original, with no brand logos or characters, in `assets/`.
 
 ## Install (colleagues)
 
