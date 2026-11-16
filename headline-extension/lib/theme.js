@@ -6,7 +6,7 @@ export const THEME_PREFS = [
   { id: 'auto', label: 'Auto: day from 6am to 7pm, night after' },
   { id: 'system', label: 'Follow my system (light = day, dark = night)' },
   { id: 'day', label: 'Always day (pink kitten)' },
-  { id: 'night', label: 'Always night (dark)' },
+  { id: 'night', label: 'Always night (Gotham)' },
 ];
 
 export function getThemePref() {

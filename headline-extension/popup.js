@@ -2,6 +2,9 @@ import { detectInstructions } from './lib/guard.js';
 import { readField, writeHeadline } from './lib/page.js';
 import { getSettings, isReady, mode } from './lib/settings.js';
 import { setThemePref, watchSystemTheme } from './lib/theme.js';
+import { progressFor, quipSequence } from './lib/quips.js';
+
+const QUIP_MS = 2600; // how long each loading line stays up
 
 const LABELS = { search: 'Search', discover: 'Discover', data: 'Data-driven', explainer: 'Explainer' };
 // Character targets per surface. Only Search is cut off hard in results.
@@ -170,7 +173,7 @@ async function onGenerate(event) {
   await readPage(); // pick up edits made since the popup opened
   if (!page.text) return;
   showWarnings();
-  render({ status: 'loading' });
+  render({ status: 'loading', startedAt: Date.now() });
   const entry = await chrome.runtime.sendMessage({
     type: 'generate',
     tabId: tab.id,
@@ -182,9 +185,41 @@ async function onGenerate(event) {
   render(entry);
 }
 
+// --- loading: witty lines and a progress bar ----------------------------------------------
+
+let loadingTimer = null;
+
+/** Starts (or resumes, after reopening the popup) the loading lines and progress bar. */
+function startLoading(startedAt) {
+  if (loadingTimer) return;
+  const lines = quipSequence({ theme: document.documentElement.dataset.theme, hasTables: Boolean(page.tables?.length) });
+  const quip = $('quip');
+  let shown = -1;
+  const tick = () => {
+    const elapsed = Date.now() - startedAt;
+    $('progress-bar').style.width = `${Math.max(3, progressFor(elapsed) * 100)}%`;
+    $('elapsed').textContent = `${Math.floor(elapsed / 1000)}s`;
+    const index = Math.floor(elapsed / QUIP_MS) % lines.length;
+    if (index !== shown) {
+      shown = index;
+      quip.classList.add('fade');
+      setTimeout(() => { quip.textContent = lines[index]; quip.classList.remove('fade'); }, shown === 0 ? 0 : 250);
+    }
+  };
+  tick();
+  loadingTimer = setInterval(tick, 500);
+}
+
+function stopLoading() {
+  clearInterval(loadingTimer);
+  loadingTimer = null;
+}
+
 function render(entry) {
   const loading = entry.status === 'loading';
   $('loading').hidden = !loading;
+  if (loading) startLoading(entry.startedAt ?? Date.now());
+  else stopLoading();
   $('generate').disabled = loading || !page.text;
   $('error').hidden = entry.status !== 'error';
   $('error').textContent = entry.message ?? '';

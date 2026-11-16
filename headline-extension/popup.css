@@ -163,6 +163,10 @@ body::after { right: -32px; transform: scaleX(-1); background-position: 0 210px;
   top: auto; bottom: 0; height: 12px;
   background: radial-gradient(circle at 14px 12px, var(--surface) 10.5px, transparent 11px) 0 0 / 28px 12px repeat-x;
 }
+/* Night: the wider city skyline rises over the panel instead of the kitten. */
+:root[data-theme="night"] .panel { margin-top: 100px; }
+:root[data-theme="night"] .peek { width: 300px; top: -96px; }
+:root[data-theme="night"] #empty img { width: 190px; }
 :root[data-theme="night"] h1 { text-transform: uppercase; letter-spacing: 0.05em; font-size: 22px; }
 :root[data-theme="night"] .tagline { color: var(--muted); letter-spacing: 0.04em; }
 .bat { width: 26px; height: 14px; flex: none; fill: var(--title); }
@@ -221,12 +225,26 @@ input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: -1p
 .small { font-size: 11px; }
 
 .loading {
-  display: flex; gap: 10px; align-items: center; margin: 14px 0 0;
-  background: var(--surface-2); border: 1.5px dashed var(--border); border-radius: 12px; padding: 9px 12px;
-  color: var(--muted);
+  margin: 14px 0 0;
+  background: var(--surface-2); border: 1.5px dashed var(--border); border-radius: 12px; padding: 10px 12px;
+  color: var(--text);
 }
+.loading-row { display: flex; gap: 10px; align-items: center; min-height: 22px; }
+#quip { font: 600 13.5px var(--display); transition: opacity 0.25s; }
+#quip.fade { opacity: 0; }
 .spinner { width: 20px; height: 20px; flex: none; color: var(--accent); animation: beat 0.9s ease-in-out infinite; }
+.spinner.night-art { width: 26px; height: 14px; animation-name: flap; }
 @keyframes beat { 0%, 100% { transform: scale(0.85); } 50% { transform: scale(1.12); } }
+@keyframes flap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.55); } }
+.progress { height: 8px; margin: 9px 0 5px; background: var(--band); border-radius: 99px; overflow: hidden; }
+#progress-bar {
+  height: 100%; width: 3%; border-radius: 99px; background: var(--accent);
+  background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.28) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.28) 50%, rgba(255, 255, 255, 0.28) 75%, transparent 75%);
+  background-size: 16px 16px; animation: stripes 0.8s linear infinite; transition: width 0.6s ease-out;
+}
+@keyframes stripes { to { background-position: 16px 0; } }
+.loading-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .error { background: var(--error-bg); color: var(--error); border: 1.5px solid currentColor; padding: 8px 12px; border-radius: 12px; margin: 12px 0 0; }
 
@@ -327,5 +345,6 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; w
 :root[data-theme="night"] .primary { box-shadow: 0 3px 0 var(--accent-strong); }
 
 @media (prefers-reduced-motion: reduce) {
-  .spinner { animation: none; }
+  .spinner, #progress-bar { animation: none; }
+  #quip { transition: none; }
 }

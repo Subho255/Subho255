@@ -54,13 +54,17 @@ The popup and settings page have two themes.
 - kittens and pastel tumblers peeking in from the edges
 - a kitten hugging a tumbler, shown until headlines arrive
 
-**Night** is a dark "after hours" theme:
+**Night** is a dark Gotham-style theme (no kitten):
 
 - a night sky with stars, faint bats and a moon glow
-- the same kitten in a black domino mask with a bat-wing bow
+- a gothic city skyline rising over the panel, with gargoyles, lit windows, a searchlight sweeping the sky, and a caped figure on a rooftop
 - charcoal panels with a yellow accent, an uppercase title between bats, and a bat-wing edge on the title band
-- masked kittens, black tumblers and bats at the edges
-- the masked kitten in a dark suit with a utility belt, hugging a black tumbler
+- gothic towers, black tumblers and bats at the edges
+- before results: a caped figure crouched on a rooftop ledge, silhouetted against the full moon, beside a gargoyle and a black tumbler
+
+The night artwork is original. It uses no DC characters, logos or the Bat-Signal.
+
+**While it works**, the popup shows a progress bar and a running timer, with a new witty line every few seconds. It always opens with "Preparing Stanley cups…", then lines such as "Calling Lisa from BLACKPINK for a vibe check…" and "Lara from KATSEYE is checking the API calls…". There are extra lines for day (pink bows, Stanley colours) and night (Alfred's coffee, the signal over the newsroom). Articles with tables add data lines such as "Running a Shapiro–Wilk test on your table…". The lines are in `lib/quips.js`, so it's easy to add more. The bar eases towards 95% and only completes when the answer arrives. If you reopen the popup mid-request, it picks up where it was.
 
 **Switching:**
 
