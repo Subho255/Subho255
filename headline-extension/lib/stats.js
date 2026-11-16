@@ -2,6 +2,7 @@
 // means, not at arithmetic, so every figure it may quote is computed here first.
 // Pure functions: used by the extension and the server alike.
 
+import { describe, distribution, unusualYears } from './distribution.js';
 import { compareCategories, compareTimeSeries, correlations, crossTab, curvature, isAdditive, sameMeasure, weightedAverages } from './explore.js';
 
 export const LIMITS = { tables: 6, rows: 80, cols: 20, cell: 80 };
@@ -48,13 +49,6 @@ export function median(xs) {
   const s = [...xs].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
-}
-
-function quantile(sorted, q) {
-  const pos = (sorted.length - 1) * q;
-  const lo = Math.floor(pos);
-  const hi = Math.ceil(pos);
-  return sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo);
 }
 
 /** Least-squares line through (x, y). Returns slope, intercept and R². */
@@ -172,14 +166,19 @@ export function seriesStats(name, rawPoints, timeAxis, { additive = true } = {})
     // Mean well above or below the median signals skew; then the median is the fairer centre.
     if (med !== 0 && Math.abs(avg - med) / Math.abs(med) > 0.15) out.skew = avg > med ? 'pulled up by high values; prefer the median' : 'pulled down by low values; prefer the median';
   }
-  // Outliers only make sense across categories: in a trend the first and last values
-  // always look extreme.
-  if (!timeAxis && ys.length >= 5) {
-    const q1 = quantile(sorted, 0.25);
-    const q3 = quantile(sorted, 0.75);
-    const iqr = q3 - q1;
-    const outliers = pts.filter((p) => p.num.value < q1 - 1.5 * iqr || p.num.value > q3 + 1.5 * iqr);
-    if (iqr > 0 && outliers.length) out.outliers = outliers.map((p) => ({ at: p.label, value: p.num.value }));
+  // Descriptive statistics: mode, variance, range, quartiles, IQR, percentiles.
+  const desc = describe(ys);
+  if (desc) Object.assign(out, desc);
+  // Distribution shape (skewness, kurtosis, normality, frequency, modality, outliers) only
+  // across categories: a trending time series is not a sample from one distribution, and
+  // its first and last values always look extreme.
+  if (!timeAxis) {
+    const dist = distribution(ys, pts.map((p) => p.label));
+    if (dist) {
+      const { outliers: outs, ...shape } = dist;
+      out.distribution = shape;
+      if (outs) out.outliers = outs;
+    }
   }
 
   if (!additive) out.additive = false; // ranks, rates, averages: never summed or shared out
@@ -224,6 +223,9 @@ export function seriesStats(name, rawPoints, timeAxis, { additive = true } = {})
   if (fit) {
     out.trend_per_year = round(fit.slope);
     out.trend_r2 = round(fit.r2, 3);
+    // Outliers in a time series: years far off the trend line (robust z-score of residuals).
+    const odd = unusualYears(pts.map((p) => ({ x: p.x, label: p.label, value: p.num.value })));
+    if (odd) out.unusual_years = odd;
     const steps = xs.slice(1).map((x, i) => x - xs[i]);
     const evenly = steps.every((s) => s === steps[0] && s > 0);
     let reason = '';

@@ -20,11 +20,13 @@ When the article contains tables, the popup adds a **Data insights** card with 2
 How it stays accurate:
 
 1. **Real tables.** The extension reads the HTML tables in the editor, fills in merged cells and multi-row headers, and uses the heading above each table as its caption.
-2. **Numbers computed in code, not by the model** (`lib/stats.js`, `lib/explore.js`). The code detects whether years run across or down the table, and which measures can be added up (counts, amounts) and which can't (ranks, rates, averages, prices). Then it computes:
+2. **Numbers computed in code, not by the model** (`lib/stats.js`, `lib/distribution.js`, `lib/explore.js`). Skewness, kurtosis, Shapiro–Wilk, percentiles and variance are tested against SciPy to 6 decimal places. The code detects whether years run across or down the table, and which measures can be added up (counts, amounts) and which can't (ranks, rates, averages, prices). Then it computes:
 
    | Family | Methods | Safeguards |
    | --- | --- | --- |
-   | Description | mean, median, standard deviation, coefficient of variation, IQR outliers, skew | Recommends the median when values are skewed |
+   | Descriptive | mean, median, mode, variance, standard deviation, coefficient of variation, range, quartiles (Q1–Q3), IQR, percentiles (P10, P90) | Mode only when a value repeats; percentiles only with 10+ values |
+   | Distribution (category tables) | skewness (positive/negative), excess kurtosis (tails), Shapiro–Wilk normality test, frequency distribution (Sturges' rule, nice bins), bimodal/multimodal detection with where the groups split, outliers by IQR and robust z-score (median/MAD) | Normality needs 8+ values and says when the sample is small; bimodality needs 10+ values and agreement between histogram peaks and the bimodality coefficient; shape stats are skipped for time series |
+   | Time-series outliers | years far off a robust (Theil–Sen) trend line | The odd year can't pull the trend towards itself |
    | Change over time | change, % change, CAGR, linear trend and R², direction streaks, biggest move, latest vs median | Percentage columns change in percentage points; no CAGR for rates |
    | Group comparison | benchmark against the group median (% above or below), ranking, top–bottom gap and % difference, growth vs the group's median CAGR, rank shifts between first and last year | — |
    | Cross-tabulation | shares of total, cells over- or under-represented against the overall mix, share shift over time (pp), Cramér's V | Only for additive measures of the same kind; Cramér's V only for whole-number counts |
@@ -133,6 +135,7 @@ lib/server.js     Google sign-in through the company server, and server requests
 lib/page.js       functions injected into the CMS page to read the body and tables, and fill the headline
 lib/stats.js      exact statistics for tables (shared with the server)
 lib/explore.js    comparison, cross-tab, weighted averages, correlation and regression
+lib/distribution.js  descriptive stats, skewness, kurtosis, Shapiro–Wilk, frequency, modality, outliers
 lib/guard.js      prompt-injection checks, escaping and number verification (shared with the server)
 lib/settings.js   settings storage
 assets/           peeking kitten, hugging kitten, side-edge artwork, icon source (SVG)

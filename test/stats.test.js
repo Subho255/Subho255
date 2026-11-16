@@ -91,7 +91,7 @@ test('categories: share of total, outliers and skew', () => {
   const s = stats.series[0];
   assert.equal(s.total, 137);
   assert.equal(s.top_share_pct, 69.3);
-  assert.deepEqual(s.outliers, [{ at: 'E', value: 95 }]);
+  assert.deepEqual(s.outliers, [{ at: 'E', value: 95, side: 'high', methods: ['IQR', 'robust z-score'] }]);
   assert.match(s.skew, /prefer the median/);
 });
 

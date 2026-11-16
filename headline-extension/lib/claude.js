@@ -57,7 +57,8 @@ Give the author 2-3 insights from the tables in <tables>, the kind a data desk w
 
 Numbers:
 - <table_stats> holds statistics computed exactly in code for each table:
-  - Description: mean, median, std_dev, outliers, skew.
+  - Description: mean, median, mode, variance, std_dev, range, quartiles, iqr, percentiles (p10, p90), skew.
+  - Distribution (categories only): skewness and skew_shape, excess_kurtosis and tails, normality (Shapiro-Wilk), frequency (histogram bins), modality (single peak, bimodal or multimodal, with where the groups split), outliers (IQR and robust z-score). For time series: unusual_years off the trend line.
   - Change over time: change, change_pct, cagr_pct, trend_per_year and trend_r2, direction, biggest_move, latest_vs_median, curvature, and projection only where the data allow it.
   - Comparison: benchmark (each category against the group median), ranking, gap, comparison.growth_benchmark, comparison.rank_shift, ranked_by_change_pct, opposite_directions.
   - Composition: cross_tab (shares of total, over- or under-represented cells, share_shift over time, cramers_v), total, top_share_pct, weighted_averages.
@@ -66,7 +67,11 @@ Numbers:
 - Quote numbers only from <table_stats> or the table itself. Do not do your own arithmetic. If a number you want is not there, leave it out.
 - Pick the method that fits the data:
   - Change over several years: cagr_pct or change_pct, and say over which years.
-  - Comparing a value with what is typical: use the median when the stats flag skew or outliers, otherwise the mean, and say which.
+  - Comparing a value with what is typical: use the median when the stats flag skew, outliers or normality "not normal", otherwise the mean, and say which. Use the mode only if a value genuinely repeats.
+  - Spread: "the middle half of states fall between Q1 and Q3" (quartiles, iqr), or "the top 10% are above p90" only when percentiles are given (10+ values). A wide range or iqr can itself be the story (inequality between states).
+  - Shape: if modality says bimodal or multimodal, the data split into groups. That is often the real story ("states fall into two clear groups: below gap_from and above gap_to"); use split for who is in each group. Heavy tails or strong skew mean a few extreme cases dominate; say so rather than quoting the average.
+  - Frequency: frequency.bins support statements like "5 of 8 states are between 70 and 80"; quote counts and bin edges exactly as given.
+  - Outliers: name them and say they are unusual for the group (outliers lists the method). In a time series, unusual_years are years well off the trend; check the article for why before explaining.
   - Two or more series moving apart: opposite_directions and ranked_by_change_pct.
   - Columns that are percentages: changes are in percentage points (change_unit). Never call them per cent changes.
   - A one-off spike: biggest_move or outliers.
@@ -94,7 +99,7 @@ Meaning:
 For each insight give:
 - insight: one sentence the author can use as written.
 - evidence: the exact numbers behind it, with years or categories.
-- method: e.g. "CAGR", "Median benchmark", "Ranking shift", "Divergence", "Consistent trend", "Accelerating trend", "Outlier", "Share shift (cross-tab)", "Weighted average", "Correlation (Spearman)", "Projection (straight-line)".
+- method: e.g. "CAGR", "Median benchmark", "Two-group split (bimodal)", "Spread (IQR)", "Skewed distribution", "Outlier", "Unusual year", "Ranking shift", "Divergence", "Consistent trend", "Accelerating trend", "Outlier", "Share shift (cross-tab)", "Weighted average", "Correlation (Spearman)", "Projection (straight-line)".
 - context: one or two sentences linking it to the story.
 - confidence: "high" (long, consistent data), "medium" or "low" (short or noisy data, or a speculative explanation).
 - caveat: what the data cannot show, or an empty string.
