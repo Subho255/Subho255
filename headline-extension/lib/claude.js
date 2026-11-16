@@ -56,7 +56,13 @@ Data insights (data_insights):
 Give the author 2-3 insights from the tables in <tables>, the kind a data desk would put in a subhead, fact box or chart. Only include an insight that tells readers something they would not see by glancing at the table. Quality over quantity: one strong insight beats three weak ones.
 
 Numbers:
-- <table_stats> holds statistics computed exactly in code for each table: mean, median, change, change_pct, cagr_pct, trend_per_year and trend_r2, direction, biggest_move, latest_vs_median, outliers, top_share_pct, ranked_by_change_pct, opposite_directions and, only where the data allow it, projection.
+- <table_stats> holds statistics computed exactly in code for each table:
+  - Description: mean, median, std_dev, outliers, skew.
+  - Change over time: change, change_pct, cagr_pct, trend_per_year and trend_r2, direction, biggest_move, latest_vs_median, curvature, and projection only where the data allow it.
+  - Comparison: benchmark (each category against the group median), ranking, gap, comparison.growth_benchmark, comparison.rank_shift, ranked_by_change_pct, opposite_directions.
+  - Composition: cross_tab (shares of total, over- or under-represented cells, share_shift over time, cramers_v), total, top_share_pct, weighted_averages.
+  - Relationships: correlations (Pearson, Spearman, Kendall's tau, p_value_approx, a matrix, and a simple regression only for strong, significant pairs).
+  A measure flagged additive: false (ranks, rates, averages, prices) is never summed or shared out.
 - Quote numbers only from <table_stats> or the table itself. Do not do your own arithmetic. If a number you want is not there, leave it out.
 - Pick the method that fits the data:
   - Change over several years: cagr_pct or change_pct, and say over which years.
@@ -64,7 +70,18 @@ Numbers:
   - Two or more series moving apart: opposite_directions and ranked_by_change_pct.
   - Columns that are percentages: changes are in percentage points (change_unit). Never call them per cent changes.
   - A one-off spike: biggest_move or outliers.
+  - How a category compares with the rest: benchmark (pct_vs_median against the group median) and ranking or gap. Name the benchmark ("14% below the median of the 8 states").
+  - Who moved up or down: comparison.rank_shift ("rose from 4th to 2nd"); who grew fastest against the group: comparison.growth_benchmark.
+  - Composition: cross_tab.share_shift ("Bihar's share rose from 26.7% to 35.1%, up 8.4 percentage points") and most_over_or_under_represented. Shares are in per cent; their changes are in percentage points.
+  - Averages over groups of different sizes: if weighted_averages is present, the weighted mean is the true overall figure. When it differs clearly from the simple mean, that gap is itself an insight: big groups pull the overall figure up or down.
+  - Speeding up or slowing down: only if curvature is present (a curve beat the straight line in a significance test). Say "growth has accelerated" or "the decline is slowing" with slope_per_year_start and slope_per_year_end.
 - Consistency matters: "fell every year for six years" (direction) is stronger than a single change. Treat a trend with trend_r2 below 0.5 as noisy, and say so if you use it.
+- Correlation: use only pairs listed under correlations (code computes them only with 5+ shared data points).
+  - Use a correlation only if significant_at_5pct is true. Even then, write "moved together" or "states with higher X tend to have higher Y", never that one causes the other, and say the caveat.
+  - If likely_shared_trend is true, both series simply rose or fell over time. Do not present them as related; at most say both trended the same way.
+  - If the note says Pearson and Spearman disagree, quote Spearman and mention that a few extreme values drive the pattern.
+  - With fewer than 10 data points, set confidence to medium at most.
+  - A regression slope ("each extra point of X goes with Y more") may be quoted only where correlations gives one, as an association.
 - Extrapolation: use a projection only if <table_stats> includes one (code allows it only for 5+ evenly spaced points with R² of at least 0.85, one period ahead). Present it as "if the trend continues, about X in YEAR", never as a forecast or fact, and give the method in the caveat. If projection_not_allowed is set, do not project at all.
 
 Meaning:
@@ -77,7 +94,7 @@ Meaning:
 For each insight give:
 - insight: one sentence the author can use as written.
 - evidence: the exact numbers behind it, with years or categories.
-- method: e.g. "CAGR", "Median comparison", "Divergence", "Consistent trend", "Outlier", "Share of total", "Projection (straight-line)".
+- method: e.g. "CAGR", "Median benchmark", "Ranking shift", "Divergence", "Consistent trend", "Accelerating trend", "Outlier", "Share shift (cross-tab)", "Weighted average", "Correlation (Spearman)", "Projection (straight-line)".
 - context: one or two sentences linking it to the story.
 - confidence: "high" (long, consistent data), "medium" or "low" (short or noisy data, or a speculative explanation).
 - caveat: what the data cannot show, or an empty string.

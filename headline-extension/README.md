@@ -20,7 +20,20 @@ When the article contains tables, the popup adds a **Data insights** card with 2
 How it stays accurate:
 
 1. **Real tables.** The extension reads the HTML tables in the editor, fills in merged cells and multi-row headers, and uses the heading above each table as its caption.
-2. **Numbers computed in code, not by the model** (`lib/stats.js`). It detects whether years run across or down the table, then computes for each series: mean, median, change, % change, CAGR, trend per year and its R², whether it rose or fell every year, the biggest single move, outliers, share of total, and which series moved in opposite directions. Percentage columns get changes in percentage points. Columns with mixed units are skipped rather than averaged.
+2. **Numbers computed in code, not by the model** (`lib/stats.js`, `lib/explore.js`). The code detects whether years run across or down the table, and which measures can be added up (counts, amounts) and which can't (ranks, rates, averages, prices). Then it computes:
+
+   | Family | Methods | Safeguards |
+   | --- | --- | --- |
+   | Description | mean, median, standard deviation, coefficient of variation, IQR outliers, skew | Recommends the median when values are skewed |
+   | Change over time | change, % change, CAGR, linear trend and R², direction streaks, biggest move, latest vs median | Percentage columns change in percentage points; no CAGR for rates |
+   | Group comparison | benchmark against the group median (% above or below), ranking, top–bottom gap and % difference, growth vs the group's median CAGR, rank shifts between first and last year | — |
+   | Cross-tabulation | shares of total, cells over- or under-represented against the overall mix, share shift over time (pp), Cramér's V | Only for additive measures of the same kind; Cramér's V only for whole-number counts |
+   | Weighted averages | rate weighted by a count column (e.g. literacy by population) next to the simple mean | Only pairs a non-additive rate with an additive count |
+   | Correlation | Pearson, Spearman, Kendall's tau-b, approximate p-value, correlation matrix (3–6 series) | 5+ shared points; significance flag at 5%; correlation of yearly changes to catch shared time trends; warns when Pearson and Spearman disagree |
+   | Regression | linear trend over time; simple linear regression for strong, significant cross-sectional pairs; quadratic (polynomial) trend to detect acceleration or slowdown | The curve is kept only if a partial F-test at 5% beats the straight line |
+
+   Multiple, logistic, ridge and lasso regression are deliberately left out. News tables rarely have more than 5–30 rows, so fitting several predictors would describe noise. Logistic regression needs a yes/no outcome per row, which these tables don't have. Ridge and lasso solve problems (many correlated predictors) these tables don't have.
+
 3. **Extrapolation is gated.** A projection is offered only with at least 5 evenly spaced points and a steady trend (R² ≥ 0.85), only one period ahead, and never below zero for counts. Otherwise the stats say why not, and the model is told not to project.
 4. **The model interprets.** It gets the table and the exact stats, may quote only those numbers, and chooses the method that fits: the median for skewed data, CAGR for multi-year growth, divergence when series move apart. It reads direction for the metric (a falling closing rank means more demand) and frames any explanation as a possibility, with a caveat that the data show a pattern, not a cause.
 
@@ -119,6 +132,7 @@ lib/claude.js     prompt, JSON schema, request and response handling (shared wit
 lib/server.js     Google sign-in through the company server, and server requests
 lib/page.js       functions injected into the CMS page to read the body and tables, and fill the headline
 lib/stats.js      exact statistics for tables (shared with the server)
+lib/explore.js    comparison, cross-tab, weighted averages, correlation and regression
 lib/guard.js      prompt-injection checks, escaping and number verification (shared with the server)
 lib/settings.js   settings storage
 assets/           peeking kitten, hugging kitten, side-edge artwork, icon source (SVG)

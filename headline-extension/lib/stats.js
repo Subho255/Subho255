@@ -2,6 +2,8 @@
 // means, not at arithmetic, so every figure it may quote is computed here first.
 // Pure functions: used by the extension and the server alike.
 
+import { compareCategories, compareTimeSeries, correlations, crossTab, curvature, isAdditive, sameMeasure, weightedAverages } from './explore.js';
+
 export const LIMITS = { tables: 6, rows: 80, cols: 20, cell: 80 };
 
 // A projection is offered only when the trend is long and steady enough to justify it.
@@ -141,7 +143,7 @@ export function toSeries({ rows }) {
 }
 
 /** Statistics for one series. Returns null when there is too little numeric data. */
-export function seriesStats(name, rawPoints, timeAxis) {
+export function seriesStats(name, rawPoints, timeAxis, { additive = true } = {}) {
   const parsed = rawPoints.map((p) => ({ ...p, num: parseNumber(p.cell) })).filter((p) => p.num);
   const units = [...new Set(parsed.map((p) => p.num.unit))];
   if (units.length > 1) return { name, skipped: `mixed units (${units.filter(Boolean).join(', ') || 'none'})` };
@@ -180,12 +182,17 @@ export function seriesStats(name, rawPoints, timeAxis) {
     if (iqr > 0 && outliers.length) out.outliers = outliers.map((p) => ({ at: p.label, value: p.num.value }));
   }
 
+  if (!additive) out.additive = false; // ranks, rates, averages: never summed or shared out
+
   if (!timeAxis) {
-    if (ys.every((y) => y >= 0) && sum(ys) > 0) {
+    // Totals and shares only for measures that add up (counts, amounts), never for ranks or rates.
+    if (additive && ys.every((y) => y >= 0) && sum(ys) > 0) {
       out.total = round(sum(ys));
       out.top_share_pct = round((sorted[sorted.length - 1] / sum(ys)) * 100, 1);
     }
     if (sorted[0] > 0) out.max_to_min_ratio = round(sorted[sorted.length - 1] / sorted[0]);
+    const comparison = compareCategories(pts.map((p) => ({ label: p.label, value: p.num.value })));
+    if (comparison) Object.assign(out, comparison);
     return out;
   }
 
@@ -230,8 +237,21 @@ export function seriesStats(name, rawPoints, timeAxis) {
       else out.projection = { year: nextX, value: round(value), method: `straight-line fit over ${ys.length} points, R² ${round(fit.r2, 2)}; one period ahead only` };
     }
     if (reason) out.projection_not_allowed = reason;
+    // Polynomial check: is the trend speeding up or slowing down? Kept only if a curve
+    // clearly beats the straight line on adjusted R².
+    const bend = curvature(xs, ys);
+    if (bend) out.curvature = bend;
   }
   return out;
+}
+
+/** A series' numeric points ({ x, label, value }), or null for mixed units or too few values. */
+function numericSeries(s, timeAxis) {
+  const pts = s.points.map((p) => ({ x: p.x, label: p.label, num: parseNumber(p.cell) })).filter((p) => p.num);
+  const units = new Set(pts.map((p) => p.num.unit));
+  if (units.size > 1 || pts.length < 2) return null;
+  if (timeAxis) pts.sort((a, b) => a.x - b.x);
+  return { name: s.name, unit: [...units][0] || '', points: pts.map((p) => ({ x: p.x, label: p.label, value: p.num.value })) };
 }
 
 /** Statistics for every table. Input: [{ caption, rows }] as read from the page. */
@@ -241,8 +261,16 @@ export function analyseTables(tables) {
     .map((t, i) => {
       const { orientation, series } = toSeries(t);
       const timeAxis = orientation.startsWith('years');
-      const stats = series.map((s) => seriesStats(s.name, s.points, timeAxis)).filter(Boolean);
+      // What a series measures: for years-across tables the rows are categories of the one
+      // measure named in the caption; otherwise each column names its own measure.
+      const metricText = (s) => (orientation === 'years across' ? `${t.caption} ${t.rows[0][0]}` : s.name);
+      const numeric = series.map((s) => {
+        const n = numericSeries(s, timeAxis);
+        return n && { ...n, additive: isAdditive(metricText(s), n.unit) };
+      });
+      const stats = series.map((s, k) => seriesStats(s.name, s.points, timeAxis, { additive: numeric[k]?.additive ?? true })).filter(Boolean);
       const result = { table: i + 1, caption: t.caption || undefined, orientation, series: stats };
+      const usable = numeric.filter(Boolean).map((n) => ({ ...n, cagr_pct: stats.find((s) => s.name === n.name)?.cagr_pct }));
 
       if (timeAxis) {
         // Which series moved most, and which moved in opposite directions.
@@ -259,7 +287,26 @@ export function analyseTables(tables) {
             };
           }
         }
+        // Group comparison over time: growth against the group median, and rank shifts.
+        const comparison = compareTimeSeries(usable);
+        if (comparison) result.comparison = comparison;
       }
+
+      // Cross-tabulation: only for additive measures of the same kind (e.g. seats by
+      // category, students by state and year), never for ranks or a mix of measures.
+      const same = sameMeasure(orientation, usable);
+      if (usable.length >= 2 && same && usable.every((s) => s.additive)) {
+        const ct = crossTab(usable, timeAxis);
+        if (ct) result.cross_tab = ct;
+      }
+      // Weighted averages: a rate column weighted by a count column over the same rows.
+      if (!same && orientation !== 'years across') {
+        const wa = weightedAverages(usable);
+        if (wa) result.weighted_averages = wa;
+      }
+      // Correlation (Pearson, Spearman, Kendall) between series sharing labels.
+      const corr = correlations(usable, timeAxis);
+      if (corr) result.correlations = corr;
       return { table: t, stats: result };
     });
 }
